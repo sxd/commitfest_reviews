@@ -172,7 +172,7 @@ def index_page(reports: list[Report]) -> str:
     <thead><tr><th>Patch</th><th>Review</th><th>Verdict</th></tr></thead>
     <tbody>{rows}</tbody>
   </table>
-  <p class=\"generated\">Only canonical final reports are synchronized every six hours; each report is rendered by Amauta.</p>
+  <p class=\"generated\">Reviews are scheduled every two hours; canonical final reports are synchronized every six hours and rendered by Amauta.</p>
 </main>
 </html>
 """

@@ -11,7 +11,15 @@ Amauta's local safe renderer, rather than publishing escaped Markdown. It then
 commits changes to `docs/` and pushes `main`; the GitHub Pages workflow publishes
 the result at <https://code.emacs.cl/commitfest_reviews/>.
 
-Install the six-hour user timer on `commitfest-amauta`:
+## Schedule
+
+`amauta-commitfest-review.timer` is managed with the review runner on
+`commitfest-amauta`. It starts one eligible CommitFest review every two hours,
+with up to ten minutes of randomized delay. An active review is never run a
+second time concurrently.
+
+This repository's separate publication timer exports completed final reports
+every six hours:
 
 ```sh
 cd /home/ubuntu/commitfest_reviews
