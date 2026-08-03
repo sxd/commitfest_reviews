@@ -1,0 +1,11 @@
+[Unit]
+Description=Synchronize CommitFest reviews every six hours
+
+[Timer]
+OnCalendar=*-*-* 00,06,12,18:10:00
+RandomizedDelaySec=15m
+Persistent=true
+Unit=commitfest-reviews-sync.service
+
+[Install]
+WantedBy=timers.target

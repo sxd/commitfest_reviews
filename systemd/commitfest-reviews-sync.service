@@ -1,0 +1,10 @@
+[Unit]
+Description=Synchronize canonical CommitFest reviews from Amauta
+After=amauta.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/ubuntu/commitfest_reviews
+ExecStart=/home/ubuntu/commitfest_reviews/sync-commitfest-reviews.py
+NoNewPrivileges=yes
+PrivateTmp=yes

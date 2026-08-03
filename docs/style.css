@@ -1,0 +1,8 @@
+:root { color-scheme: light dark; font-family: system-ui, sans-serif; }
+body { margin: 0; }
+main { box-sizing: border-box; margin: 2rem auto; max-width: 75rem; padding: 0 1rem; }
+table { border-collapse: collapse; width: 100%; }
+th, td { border-bottom: 1px solid #8886; padding: .55rem; text-align: left; vertical-align: top; }
+pre { overflow-wrap: anywhere; white-space: pre-wrap; }
+.report { border: 1px solid #8886; border-radius: .4rem; padding: 1rem; }
+.generated { color: #666; font-size: .9rem; }
