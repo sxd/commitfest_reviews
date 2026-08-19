@@ -21,7 +21,7 @@ import subprocess
 import sys
 from urllib.error import URLError
 from urllib.parse import quote
-from urllib.request import urlopen
+from urllib.request import Request, urlopen
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -97,8 +97,12 @@ def fetch_rendered_html(amauta_http: str, source: str, slug: str) -> str:
         f"{base_url}/ui/reports/{quote(source, safe='')}/"
         f"{quote(slug, safe='')}/download/html"
     )
+    token = os.environ.get("AMAUTA_TOKEN", "").strip()
+    if not token:
+        raise SyncError("AMAUTA_TOKEN is required to fetch Amauta HTML")
+    request = Request(url, headers={"Authorization": f"Bearer {token}"})
     try:
-        with urlopen(url, timeout=30) as response:  # noqa: S310 -- fixed local Amauta URL
+        with urlopen(request, timeout=30) as response:  # noqa: S310 -- fixed local Amauta URL
             rendered = response.read().decode("utf-8")
     except (OSError, URLError, UnicodeDecodeError) as exc:
         raise SyncError(f"could not fetch Amauta HTML for {slug}: {exc}") from exc
