@@ -1,0 +1,1436 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>CommitFest 6207 — Windows Socket Handle Inheritance Fix (review)</title><style>:root{--bg:#f8fafc;--panel:#fff;--panel2:#f1f5f9;--ink:#0f172a;--muted:#64748b;--line:#cbd5e1;--accent:#2563eb;--accent-hover:#1d4ed8;--crit:#dc2626;--high:#ea580c;--med:#ca8a04;--low:#0284c7;--ok:#16a34a;--code:#1e293b;--code-bg:#e2e8f0;--code-line:#cbd5e1;--button-bg:#e2e8f0;--button-hover:#cbd5e1;--button-ink:#0f172a;--shadow:rgba(0,0,0,.05);--row-alt:#f8fafc;--warn-bg:#fef3c7;--warn-line:#fde68a;--warn-ink:#92400e;--error-bg:#fee2e2;--soft-ok:#f0fdf4;--soft-ok-line:#bbf7d0;--page-pad:clamp(16px,2vw,40px);--readable:72ch;color-scheme:light dark}*{box-sizing:border-box}body{font:16px/1.6 -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;margin:0;padding:24px var(--page-pad) 80px;width:100%;max-width:none;color:var(--ink);background:var(--bg)}a{color:var(--accent);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:2px}a:hover,a:focus{color:var(--accent-hover)}nav{display:flex;gap:1rem;align-items:center;margin:0 0 1.25rem;padding:.75rem 1rem;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:0 4px 12px var(--shadow)}nav a{font-weight:600;text-decoration:none;color:var(--muted)}nav a:hover{color:var(--ink)}.table-wrap{border:1px solid var(--line);border-radius:8px;overflow-x:auto;box-shadow:0 4px 12px var(--shadow);margin:1.25rem 0;background:var(--panel)}table{border-collapse:collapse;width:100%;background:var(--panel);border-radius:8px}th,td{border:1px solid var(--line);padding:.5rem .75rem;text-align:left;vertical-align:top}th{background:var(--panel2);color:var(--muted);font-size:.85rem;font-weight:600}tr:nth-child(even) td{background:var(--row-alt)}th a{color:inherit;text-decoration:none}th a:hover,th a:focus{color:var(--ink);text-decoration:underline}.meta{color:var(--muted)}.label{font-size:.85rem;background:var(--panel2);padding:.2rem .5rem;border-radius:999px;font-weight:600}code,pre{font-family:SFMono-Regular,ui-monospace,Menlo,Consolas,monospace;color:var(--code);font-size:.9em}code{background:var(--code-bg);border:1px solid var(--code-line);border-radius:4px;padding:.1rem .3rem}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:1.25rem;tab-size:4}form{display:flex;gap:.6rem;flex-wrap:wrap;margin:1rem 0}input,select{font:inherit;padding:.35rem .5rem;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink)}button{font:inherit;font-weight:600;border:1px solid var(--line);background:var(--button-bg);color:var(--button-ink);border-radius:6px;padding:.35rem .75rem;cursor:pointer}button:hover{background:var(--button-hover)}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin:1.25rem 0}.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:1rem;box-shadow:0 4px 12px var(--shadow)}.card h2{font-size:1.05rem;line-height:1.35;margin:.1rem 0 .4rem}.card p{margin:.3rem 0;color:var(--muted)}.downloads a{margin-right:.8rem}.readable{max-width:var(--readable);line-height:1.6}.report-doc{margin:0 0 2.5rem}.report-head{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px 24px;margin-bottom:1.25rem;box-shadow:0 4px 12px var(--shadow)}.report-head h1{margin:0 0 .5rem;font-size:1.75rem;line-height:1.3;font-weight:700;color:var(--ink)}.report-sub{color:var(--muted);font-size:1rem;margin:0 0 1.25rem}.report-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.6rem 1rem;font-size:.95rem}.report-grid strong{display:block;color:var(--muted);font-size:.85rem;font-weight:600;text-transform:uppercase;letter-spacing:.02em}.tag-list{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.25rem}.verdict-box{border-left:5px solid var(--high);background:var(--panel);border:1px solid var(--line);border-left-width:5px;border-radius:8px;padding:16px 20px;margin:1.25rem 0}.verdict-box strong{display:block;color:var(--high);margin-bottom:.25rem;font-size:1rem}.verdict-critical{border-left-color:var(--crit)}.verdict-critical strong{color:var(--crit)}.verdict-ok{border-left-color:var(--ok)}.verdict-ok strong{color:var(--ok)}.badge{display:inline-block;border-radius:999px;padding:.2rem .6rem;font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.03em;border:1px solid transparent;white-space:nowrap}.sev-critical{background:#fee2e2;color:var(--crit);border-color:#fecaca}.sev-high{background:#ffedd5;color:var(--high);border-color:#fed7aa}.sev-medium{background:#fef3c7;color:var(--med);border-color:#fde68a}.sev-low{background:#dbeafe;color:var(--low);border-color:#bfdbfe}.area-badge{background:#e2e8f0;color:#334155;border-color:#cbd5e1}.area-core{background:#dbeafe;color:var(--accent);border-color:#93c5fd}.area-ext{background:#ede9fe;color:#7c3aed;border-color:#ddd6fe}.area-docs{background:#e2e8f0;color:#475569;border-color:#cbd5e1}.area-test{background:#dcfce7;color:var(--ok);border-color:#bbf7d0}.area-ui{background:#cffafe;color:#0891b2;border-color:#a5f3fc}.area-ops{background:#ffedd5;color:#ea580c;border-color:#fed7aa}.report-body h2{font-size:1.35rem;border-bottom:2px solid var(--line);padding-bottom:.5rem;margin:2.5rem 0 1rem;font-weight:700;color:var(--ink)}.report-body>h3{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:.65rem .85rem;margin:1.25rem 0 .75rem;font-size:1.1rem;font-weight:600}.finding-card{background:var(--panel);border:1px solid var(--line);border-left:5px solid var(--accent);border-radius:8px;padding:16px 20px;margin:16px 0}.finding-card.card-critical{border-left-color:var(--crit)}.finding-card.card-high{border-left-color:var(--high)}.finding-card.card-medium{border-left-color:var(--med)}.finding-card.card-low{border-left-color:var(--low)}.finding-head{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin-bottom:.5rem}.finding-id{font-weight:700;color:var(--muted);font-size:1rem}.finding-head h3{margin:0;font-size:1.1rem;line-height:1.4;font-weight:600}.kv{display:grid;grid-template-columns:9rem 1fr;gap:.6rem;border-bottom:1px solid var(--line);padding:.5rem 0;font-size:.95rem}.kv strong{color:var(--muted);font-weight:600}.md-table{font-size:.9rem}.code-block{font-size:.9em}.frontmatter{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:.65rem .85rem;margin:1.25rem 0}.frontmatter pre{border:0;margin:.6rem 0 0;padding:.7rem}.suggested-tests{background:var(--soft-ok);border:1px solid var(--soft-ok-line);border-left:4px solid var(--ok);border-radius:6px;padding:.75rem 1rem;margin:1rem 0}@media (max-width:640px){body{padding-top:20px;padding-bottom:60px}.kv{grid-template-columns:1fr}.report-head{padding:16px}.report-grid{grid-template-columns:1fr}.report-head h1{font-size:1.5rem}}@media (max-width:480px){.report-grid{grid-template-columns:1fr}.finding-head{flex-direction:column;align-items:flex-start;gap:.25rem}.finding-id{font-size:.9rem}}.graph-banner{background:var(--warn-bg);border:1px solid var(--warn-line);border-left:4px solid var(--med);border-radius:8px;padding:.75rem 1rem;margin:1rem 0;font-weight:600;color:var(--warn-ink)}.graph-banner.graph-stale{background:var(--warn-bg);color:var(--warn-ink);border-left-color:var(--med)}.graph-banner.graph-ambiguous{background:#ffedd5;color:#9a3412;border-left-color:var(--high)}.graph-banner.graph-missing{background:#f1f5f9;color:#475569;border-left-color:var(--muted)}.graph-banner.graph-error{background:var(--error-bg);color:var(--crit);border-left-color:var(--crit)}.graph-svg{background:var(--panel);border:1px solid var(--line);border-radius:8px;display:block;margin:1.25rem 0;max-width:100%;height:auto}.graph-shell{margin:1rem 0}.graph-control-bar{display:flex;gap:.6rem;flex-wrap:wrap;align-items:end;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:.75rem;margin:1rem 0}.graph-control-bar label{display:flex;flex-direction:column;gap:.2rem;font-size:.85rem;color:var(--muted)}.graph-control-bar input,.graph-control-bar select{min-width:8rem}.source-switcher{margin:.75rem 0}.graph-chooser h2{margin-top:1.25rem}.graph-legend{border:1px solid var(--line);border-radius:8px;background:var(--panel);padding:.75rem;margin:1rem 0}.graph-legend ul{margin:.4rem 0;padding-left:1.2rem}.graph-node-link:focus .graph-node{stroke:var(--accent);stroke-width:3}.graph-edge.inferred{stroke-dasharray:6 4}.graph-edge.cross-source{stroke-width:2.5}.graph-enhance-controls{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin:.75rem 0}.graph-enhance-controls fieldset{display:flex;gap:.45rem;flex-wrap:wrap;border:1px solid var(--line);border-radius:6px;padding:.35rem .55rem}.graph-truncation{background:var(--warn-bg);border:1px solid var(--warn-line);border-radius:6px;padding:.6rem .9rem;margin:1rem 0;color:var(--warn-ink)}.graph-node{stroke:#94a3b8;stroke-width:1.5}.graph-edge{stroke:#cbd5e1;stroke-width:1.5;fill:none}.graph-edge.calls{stroke:#2563eb}.graph-edge.includes{stroke:#7c3aed}.graph-edge.mentions_test{stroke:#16a34a}.graph-edge.doc-links{stroke:#ea580c}.graph-edge.defines{stroke:#0891b2}.graph-edge.mail{stroke:#0f766e}.graph-edge.references{stroke:#9333ea}.graph-edge.contains{stroke:#64748b}.graph-edge-label{fill:var(--muted);paint-order:stroke;stroke:var(--panel);stroke-width:3px;stroke-linejoin:round}.graph-label-source{fill:#1d4ed8}.graph-label-symbol{fill:#0f172a}.graph-label-file{fill:#475569}.graph-label-synthetic{fill:#92400e;font-style:italic}.graph-label-other{fill:#334155}@media (prefers-color-scheme: dark){:root{--bg:#0f1115;--panel:#171b22;--panel2:#232936;--ink:#e5e7eb;--muted:#a7b0be;--line:#3b4352;--accent:#8ab4ff;--accent-hover:#bfdbfe;--crit:#f87171;--high:#fb923c;--med:#facc15;--low:#38bdf8;--ok:#4ade80;--code:#e2e8f0;--code-bg:#111827;--code-line:#475569;--button-bg:#293241;--button-hover:#374151;--button-ink:#f8fafc;--shadow:rgba(0,0,0,.35);--row-alt:#121720;--warn-bg:#2f2611;--warn-line:#8a6a16;--warn-ink:#fde68a;--error-bg:#351b1f;--soft-ok:#10261a;--soft-ok-line:#2f6b43}body{background:var(--bg);color:var(--ink)}input,select{background:var(--panel);color:var(--ink);border-color:var(--line)}button{background:var(--button-bg);color:var(--button-ink);border-color:var(--line)}button:hover{background:var(--button-hover)}code{background:var(--code-bg);color:var(--code);border-color:var(--code-line)}pre{background:var(--panel2);color:var(--code);border-color:var(--line)}tr:nth-child(even) td{background:var(--row-alt)}.area-badge{background:#293241;color:#d1d5db;border-color:var(--line)}.sev-critical{background:#3b1d24;color:#fecaca;border-color:#7f1d1d}.sev-high{background:#3a2618;color:#fed7aa;border-color:#9a3412}.sev-medium{background:#372f16;color:#fde68a;border-color:#854d0e}.sev-low{background:#132a3a;color:#bae6fd;border-color:#075985}.graph-banner.graph-ambiguous{background:#3a2618;color:#fed7aa;border-color:#9a3412}.graph-banner.graph-missing{background:var(--panel2);color:var(--muted);border-color:var(--line)}.graph-label-source{fill:#8ab4ff}.graph-label-symbol{fill:#f8fafc}.graph-label-file{fill:#cbd5e1}.graph-label-synthetic{fill:#fde68a}.graph-label-other{fill:#d1d5db}.graph-edge{stroke:#64748b}.graph-node{stroke:#94a3b8}}</style></head><body><article class="report-doc"><header class="report-head"><h1>CommitFest 6207 — Windows Socket Handle Inheritance Fix (review)</h1><p class="report-sub">code-review · generated from canonical Markdown</p><div class="report-grid"><div><strong>Type</strong><br>code-review</div><div><strong>Source</strong><br>postgresql-master</div><div><strong>Slug</strong><br><code>commitfest-6207-review</code></div><div><strong>Tags</strong><br><span class="tag-list"><span class="badge area-badge">code-review</span><span class="badge area-badge">commitfest</span><span class="badge area-badge">security</span><span class="badge area-badge">socket</span><span class="badge area-badge">windows</span></span></div><div><strong>Updated</strong><br>2026-10-02T18:09:55.536309+00:00</div></div></header><section class="verdict-box"><strong>Verdict / Summary</strong>waiting-on-author</section><div class="report-body"><details class="frontmatter"><summary>Front matter</summary><pre>schema: review-report-v2
+target: CommitFest 6207 — Windows socket handle inheritance fix
+head: 6f3bdadaadc4692050ca20dff53d3890088b9272
+base: 6f3bdadaadc4692050ca20dff53d3890088b9272
+verdict: waiting-on-author
+scope_identity: diff-sha:fa23de5c6dfe69fba8e39f62b0875bb20a632fe808e88631a04c515e0913fb1d</pre></details><h1>CommitFest 6207 — Windows Socket Handle Inheritance Fix</h1><p class="readable"><strong>Verdict:</strong> <code>waiting-on-author</code> <strong>Blocker counts:</strong> verified=0, unverified=0 <strong>Findings:</strong> 2 MAJOR (tests), 2 MINOR (security/maintainability), 1 MINOR (tests), 3 NIT <strong>Thread:</strong> [pgsql-hackers 626963](https://www.postgresql.org/message-id/flat/1387e1ea-ee05-4f5b-a1c4-6c91fddb6d07%40gmail.com) — reconciled, no unresolved objections <strong>Coverage:</strong> not-applicable (WIN32-guarded code, non-instrumentable on Linux build host)</p><h2>Patch summary</h2><p class="readable">The patch prevents Windows socket handle inheritance to child processes:</p><ol><li><code>pgwin32_socket()</code> now passes <code>WSA_FLAG_NO_HANDLE_INHERIT</code> to <code>WSASocket()</code> — newly created sockets (including the listening socket) are non-inheritable.</li><li><code>BackendInitialize()</code> calls <code>SetHandleInformation(... HANDLE_FLAG_INHERIT, 0)</code> on the client socket under <code>#ifdef WIN32</code> — clears inheritance on the backend&#x27;s client socket (which <code>read_inheritable_socket</code> recreates as inheritable via <code>WSASocket(FROM_PROTOCOL_INFO,...,0)</code> with <code>dwFlags=0</code>).</li><li>New TAP test <code>src/bin/pg_ctl/t/005_socket_handle_inheritance.pl</code> (Windows-only).</li></ol><p class="readable"><strong>Core fix correctness:</strong> The two-pronged approach (creation-time flag + post-inheritance clear) is correct for the stated zombie-listening-port bug. The approach is endorsed on-list by Thomas Munro (thread 626963, 2025-11-07). No catalog/ABI change; no catversion bump needed.</p><h2>Findings</h2><div class="table-wrap"><table class="md-table"><thead><tr><th>ID</th><th>Severity</th><th>Class</th><th>Location</th><th>Verification</th><th>Repair Validation</th></tr></thead><tbody><tr><td>PAT-1</td><td>MAJOR</td><td>tests</td><td>src/bin/pg_ctl/t/005_socket_handle_inheritance.pl:38-42</td><td>verified</td><td>not-run</td></tr><tr><td>PAT-2</td><td>MAJOR</td><td>tests</td><td>src/bin/pg_ctl/t/005_socket_handle_inheritance.pl:38-42</td><td>verified</td><td>not-run</td></tr><tr><td>PAT-3</td><td>MINOR</td><td>tests</td><td>src/bin/pg_ctl/t/005_socket_handle_inheritance.pl:125-133</td><td>verified</td><td>not-run</td></tr><tr><td>PAT-4</td><td>NIT</td><td>tests</td><td>src/bin/pg_ctl/t/005_socket_handle_inheritance.pl:134</td><td>verified</td><td>not-run</td></tr><tr><td>PAT-5</td><td>MINOR</td><td>maintainability</td><td>src/bin/pg_ctl/meson.build:30</td><td>verified</td><td>not-run</td></tr><tr><td>PAT-6</td><td>MINOR</td><td>security</td><td>src/backend/tcop/backend_startup.c:186-189</td><td>verified</td><td>not-run</td></tr><tr><td>PAT-7</td><td>MINOR</td><td>security</td><td>src/backend/port/win32/socket.c:341-359</td><td>verified</td><td>not-run</td></tr><tr><td>PAT-8</td><td>NIT</td><td>correctness</td><td>src/backend/tcop/backend_startup.c:182-185</td><td>verified</td><td>not-run</td></tr><tr><td>PAT-9</td><td>NIT</td><td>docs</td><td>src/backend/port/win32/socket.c:300-301</td><td>verified</td><td>not-run</td></tr></tbody></table></div><section class="finding-card card-low"><div class="finding-head"><span class="finding-id">PAT-1</span><h3>— MAJOR — tests — src/bin/pg_ctl/t/005_socket_handle_inheritance.pl:38-42</h3></div><p class="readable"><strong>Mechanism:</strong> Test uses \copy (psql client-side meta-command) to spawn a program; the spawned process is a child of psql, not a backend. The patched server code (pgwin32_socket, BackendInitialize SetHandleInformation) is never exercised.</p><p class="readable"><strong>Failure mode:</strong> The test passes or fails independently of the fix. Whatever result it produces is unrelated to the patched code paths.</p><p class="readable"><strong>Verification status:</strong> verified <strong>Verification method:</strong> source-analysis <strong>Verification evidence:</strong> src/bin/psql/copy.c:263-265,289-293 (\copy processed client-side via popen in psql); src/test/perl/PostgreSQL/Test/Cluster.pm:2077-2102 (safe_psql invokes psql which processes meta-commands client-side). Contrast with server-side COPY TO PROGRAM in src/backend/commands/copyto.c:1166 (OpenPipeStream).</p><p class="readable"><strong>Repair instruction:</strong></p><ul><li>Files: src/bin/pg_ctl/t/005_socket_handle_inheritance.pl, src/test/recovery/t/058_socket_handle_inheritance.pl, src/test/recovery/meson.build, src/bin/pg_ctl/meson.build</li><li>Locations: src/bin/pg_ctl/t/005_socket_handle_inheritance.pl (delete), src/test/recovery/t/058_socket_handle_inheritance.pl (new, uses server-side COPY TO PROGRAM), src/test/recovery/meson.build (add t/058 entry), src/bin/pg_ctl/meson.build (remove staged t/005 entry)</li><li>Exact edits: Delete the old test. Create a new test under src/test/recovery/t/058_socket_handle_inheritance.pl that uses server-side COPY (SELECT 1) TO PROGRAM so the child is spawned by the backend, exercising the patched BackendInitialize SetHandleInformation and pgwin32_socket code paths.</li><li>Intended postcondition: The child process is spawned by a backend via server-side COPY TO PROGRAM, exercising the patched server code.</li></ul><p class="readable"><strong>Code example:</strong> status=provided, relationship=illustrative</p><div class="meta">perl</div><pre class="code-block">$node-&gt;safe_psql(&#x27;postgres&#x27;, qq{COPY (SELECT 1) TO PROGRAM &#x27;$copy_cmd&#x27;;});</pre><p class="readable"><strong>Patch:</strong> status=provided, format=unified-diff, applies_to_head=6f3bdadaadc4692050ca20dff53d3890088b9272, sha256=106853b5d84ca67a1b11b163c37c8065d82e3a58e95f30f531388ee722c04ea1</p><div class="meta">diff</div><pre class="code-block">diff --git a/src/bin/pg_ctl/meson.build b/src/bin/pg_ctl/meson.build
+index 69fa7a28427..e7468116b7 100644
+--- a/src/bin/pg_ctl/meson.build
++++ b/src/bin/pg_ctl/meson.build
+@@ -27,7 +27,6 @@ tests += {
+       &#x27;t/002_status.pl&#x27;,
+       &#x27;t/003_promote.pl&#x27;,
+       &#x27;t/004_logrotate.pl&#x27;,
+-      &#x27;t/005_socket_handle_inheritance.pl&#x27;,
+     ],
+   },
+ }
+diff --git a/src/bin/pg_ctl/t/005_socket_handle_inheritance.pl b/src/bin/pg_ctl/t/005_socket_handle_inheritance.pl
+deleted file mode 100644
+--- a/src/bin/pg_ctl/t/005_socket_handle_inheritance.pl
++++ /dev/null
+@@ -1,134 +0,0 @@
+-# Copyright (c) 2025, PostgreSQL Global Development Group
+-
+-# Test that socket handles are not inherited by child processes on Windows.
+-#
+-# Without the fix, child processes spawned via COPY TO PROGRAM inherit socket
+-# handles from the backend. Windows reference counting prevents these sockets
+-# from being freed when the postmaster exits, leaving the port bound to a dead
+-# process (a &quot;zombie&quot; binding). This test verifies that after killing the
+-# postmaster while a child process is still running, the listening port is
+-# immediately freed rather than remaining in a zombie state.
+-
+-use strict;
+-use warnings;
+-
+-use PostgreSQL::Test::Cluster;
+-use PostgreSQL::Test::Utils;
+-use Test::More;
+-use Time::HiRes qw(sleep);
+-
+-# This test is Windows-specific
+-if ($^O ne &#x27;MSWin32&#x27;)
+-{
+-	plan skip_all =&gt; &#x27;test is specific to Windows socket handle inheritance&#x27;;
+-}
+-
+-my $node = PostgreSQL::Test::Cluster-&gt;new(&#x27;main&#x27;);
+-$node-&gt;init;
+-$node-&gt;start;
+-
+-# Get the port number for verification
+-my $port = $node-&gt;port;
+-
+-# Spawn a long-running child process via COPY TO PROGRAM that will outlive
+-# the postmaster. Without the fix, this child inherits socket handles.
+-my $marker_file = $node-&gt;data_dir . &#x27;/ps_marker.txt&#x27;;
+-unlink $marker_file if -e $marker_file;
+-
+-$node-&gt;safe_psql(
+-	&#x27;postgres&#x27;,
+-	qq{\\copy (select 1) to program &#x27;powershell -Command &quot;echo marker &gt; $marker_file; Start-Sleep 120&quot;&#x27;}
+-);
+-
+-# Wait for PowerShell to spawn
+-my $ps_spawned = 0;
+-for (my $i = 0; $i &lt; 100; $i++)
+-{
+-	if (-e $marker_file)
+-	{
+-		$ps_spawned = 1;
+-		last;
+-	}
+-	sleep 0.1;
+-}
+-
+-ok($ps_spawned, &#x27;child process spawned successfully&#x27;);
+-
+-# Stop the postmaster (simulates a crash), leaving the child process running.
+-$node-&gt;stop(&#x27;immediate&#x27;);
+-sleep 0.5;
+-
+-# Verify that the listening port is freed immediately. With the bug, the port
+-# remains bound to the dead postmaster PID because the child process inherited
+-# the socket handles. With the fix, the port is freed because socket handles
+-# were not inherited.
+-my $netstat_output = `netstat -ano | findstr &quot;:$port.*LISTENING&quot;`;
+-
+-if ($netstat_output)
+-{
+-	fail(&#x27;listening port remains bound after postmaster exit (zombie port)&#x27;);
+-	diag(&quot;Port is still bound - socket handles were inherited by child process&quot;);
+-	diag(&quot;netstat output:\n$netstat_output&quot;);
+-
+-	if ($netstat_output =~ /LISTENING\s+(\d+)/)
+-	{
+-		my $bound_pid = $1;
+-		my $process_name = get_process_name($bound_pid);
+-
+-		if ($process_name eq &#x27;unknown&#x27; || $process_name eq &#x27;&#x27;)
+-		{
+-			diag(&quot;Port bound to dead process (PID $bound_pid) - zombie binding detected&quot;);
+-		}
+-		else
+-		{
+-			diag(&quot;Port bound to: $process_name (PID $bound_pid)&quot;);
+-		}
+-	}
+-}
+-else
+-{
+-	pass(&#x27;listening port freed immediately after postmaster exit&#x27;);
+-}
+-
+-# Additional verification: Confirm the port is actually available for binding.
+-# This tests the real-world scenario that matters to users.
+-my $can_bind = test_port_available($port);
+-ok($can_bind, &quot;port $port is available for new connections&quot;);
+-
+-# Cleanup
+-cleanup_powershell_processes();
+-unlink $marker_file if -e $marker_file;
+-
+-done_testing();
+-
+-# Test if port can actually be bound
+-sub test_port_available
+-{
+-	my ($port) = @_;
+-
+-	use Socket;
+-
+-	socket(my $sock, PF_INET, SOCK_STREAM, getprotobyname(&#x27;tcp&#x27;)) or return 0;
+-	setsockopt($sock, SOL_SOCKET, SO_REUSEADDR, 1);
+-
+-	my $addr = sockaddr_in($port, INADDR_ANY);
+-	my $result = bind($sock, $addr);
+-	close($sock);
+-	
+-	return $result ? 1 : 0;
+-}
+-
+-# Get process name by PID
+-sub get_process_name
+-{
+-	my ($pid) = @_;
+-	my $name = `powershell -Command &quot;(Get-Process -Id $pid -ErrorAction SilentlyContinue).ProcessName&quot; 2&gt;nul`;
+-	chomp $name;
+-	return $name || &#x27;unknown&#x27;;
+-}
+-
+-# Clean up test child processes
+-sub cleanup_powershell_processes
+-{
+-	system(&#x27;powershell -Command &quot;Get-Process powershell -ErrorAction SilentlyContinue | Where-Object {$_.Id -ne $PID} | Stop-Process -Force -ErrorAction SilentlyContinue&quot; 2&gt;nul&#x27;);
+-}
+diff --git a/src/test/recovery/meson.build b/src/test/recovery/meson.build
+index 123456789ab..23456789abc 100644
+--- a/src/test/recovery/meson.build
++++ b/src/test/recovery/meson.build
+@@ -68,6 +68,7 @@
+       &#x27;t/056_standby_snapshot_export.pl&#x27;,
+       &#x27;t/057_snapshot_commit_race.pl&#x27;,
++      &#x27;t/058_socket_handle_inheritance.pl&#x27;,
+     ],
+   },
+ }
+diff --git a/src/test/recovery/t/058_socket_handle_inheritance.pl b/src/test/recovery/t/058_socket_handle_inheritance.pl
+new file mode 100644
+--- /dev/null
++++ b/src/test/recovery/t/058_socket_handle_inheritance.pl
+@@ -0,0 +1,80 @@
++# Copyright (c) 2025, PostgreSQL Global Development Group
++
++# Test that socket handles are not inherited by child processes on Windows.
++#
++# Without the fix, a detached grandchild spawned via COPY TO PROGRAM
++# inherits the listening socket; the kernel&#x27;s reference counting keeps the
++# port bound after the postmaster dies, and a restart on the same port fails.
++# With the fix, the listening socket is not inherited and the restart succeeds.
++
++use strict;
++use warnings FATAL =&gt; &#x27;all&#x27;;
++
++use PostgreSQL::Test::Cluster;
++use PostgreSQL::Test::Utils;
++use Test::More;
++use Time::HiRes qw(sleep);
++
++plan skip_all =&gt; &#x27;this test exercises Windows socket handle inheritance&#x27;
++  if $^O ne &#x27;MSWin32&#x27;;
++
++my $node = PostgreSQL::Test::Cluster-&gt;new(&#x27;main&#x27;);
++$node-&gt;init;
++$node-&gt;start;
++
++my $port = $node-&gt;port;
++my $data_dir = $node-&gt;data_dir;
++my $marker_file = &quot;$data_dir/copy_marker.txt&quot;;
++my $pidfile     = &quot;$data_dir/copy_grandchild_pid.txt&quot;;
++unlink $marker_file, $pidfile;
++
++my $copy_cmd =
++    q{powershell -NoProfile -Command &quot;}
++  . qq{Set-Content -Path &#x27;$marker_file&#x27; -Value &#x27;started&#x27; -Encoding ASCII; }
++  . qq{\$p = Start-Process -FilePath powershell -ArgumentList &#x27;-NoProfile&#x27;,&#x27;-Command&#x27;,&#x27;Start-Sleep 300&#x27; -WindowStyle Hidden -PassThru; }
++  . qq{\$p.Id | Out-File -FilePath &#x27;$pidfile&#x27; -Encoding ASCII; }
++  . q{exit 0&quot;}
++  . q{};
++
++$node-&gt;safe_psql(
++	&#x27;postgres&#x27;,
++	qq{COPY (SELECT 1) TO PROGRAM &#x27;$copy_cmd&#x27;;});
++
++my $grandchild_pid;
++ok( PostgreSQL::Test::Utils::poll_execute(
++		sub { -e $marker_file &amp;&amp; -e $pidfile; }
++	),
++	&#x27;detached grandchild spawned by backend COPY TO PROGRAM&#x27;
++);
++
++{
++	open my $fh, &#x27;&lt;&#x27;, $pidfile or die &quot;could not open $pidfile: $!&quot;;
++	$grandchild_pid = &lt;$fh&gt;;
++	close $fh;
++	chomp $grandchild_pid if defined $grandchild_pid;
++}
++diag(&quot;grandchild pid: $grandchild_pid&quot;) if defined $grandchild_pid;
++
++$node-&gt;kill9;
++sleep 0.5;
++
++my $restarted = $node-&gt;start(fail_ok =&gt; 1);
++ok($restarted, &quot;postmaster restarted on port $port after crash with detached grandchild running&quot;);
++
++if (!$restarted)
++{
++	diag(&quot;restart failed - listening port was not freed; &quot;);
++	diag(&quot;this indicates the detached grandchild inherited the listening socket&quot;);
++}
++
++$node-&gt;stop(&#x27;immediate&#x27;);
++if (defined $grandchild_pid &amp;&amp; $grandchild_pid =~ /^\d+$/)
++{
++	system(
++		qq{powershell -NoProfile -Command &quot;Stop-Process -Id $grandchild_pid -Force -ErrorAction SilentlyContinue&quot; 2&gt;$null}
++	);
++}
++unlink $marker_file, $pidfile;
++
++done_testing();
++</pre><p class="readable"><strong>Repair validation:</strong> status=not-run</p><ul><li>Methods: apply-check, diff-check</li><li>Commands: git apply --check patch-test-relocation.diff, git apply patch-test-relocation.diff</li><li>Evidence: Patch applies cleanly to HEAD 6f3bdadaadc. Apply-check and diff-check confirm structural validity. Targeted-test cannot run: the test is Windows-only (plan skip_all on non-MSWin32) and the build host is Linux.</li><li>Reason: Windows-only TAP test (plan skip_all if $^O ne &#x27;MSWin32&#x27;). Targeted-test cannot run on Linux build host. Only apply-check and diff-check were performed.</li><li>Tested patch SHA-256: 106853b5d84ca67a1b11b163c37c8065d82e3a58e95f30f531388ee722c04ea1</li></ul><p class="readable"><strong>Test example:</strong> status=provided</p><ul><li>Vehicle: tap</li><li>Files: src/test/recovery/t/058_socket_handle_inheritance.pl</li><li>Oracle: With the fix: detached grandchild does not inherit listening socket, port freed after kill9, restart succeeds. Without the fix: grandchild inherits listening socket, port stays bound, restart fails.</li><li>Baseline result: On Windows without fix: restart fails (port stuck). On Linux: test skips (plan skip_all).</li><li>Patched result: On Windows with fix: restart succeeds (port freed). On Linux: test skips.</li></ul><p class="readable">---</p></section><section class="finding-card card-low"><div class="finding-head"><span class="finding-id">PAT-2</span><h3>— MAJOR — tests — src/bin/pg_ctl/t/005_socket_handle_inheritance.pl:38-42</h3></div><p class="readable"><strong>Mechanism:</strong> Even with server-side COPY TO PROGRAM, pclose() in ClosePipeStream blocks until the child exits. The Start-Sleep 120 child keeps safe_psql blocked for 120 seconds, causing timeout or hang.</p><p class="readable"><strong>Failure mode:</strong> The test hangs for ~120s per run or times out, producing a spurious failure regardless of the fix.</p><p class="readable"><strong>Verification status:</strong> verified <strong>Verification method:</strong> source-analysis <strong>Verification evidence:</strong> src/backend/commands/copyto.c:721-741 (ClosePipeToProgram calls ClosePipeStream/pclose which blocks until child exits); src/test/perl/PostgreSQL/Test/Cluster.pm:2085-2091 (safe_psql blocks until psql returns).</p><p class="readable"><strong>Repair instruction:</strong></p><ul><li>Files: src/bin/pg_ctl/t/005_socket_handle_inheritance.pl, src/test/recovery/t/058_socket_handle_inheritance.pl, src/test/recovery/meson.build, src/bin/pg_ctl/meson.build</li><li>Locations: COPY TO PROGRAM command in the new test</li><li>Exact edits: Use a detached PowerShell Start-Process grandchild that sleeps in the background while the outer powershell exits 0 immediately, so pclose() returns promptly and safe_psql does not block.</li><li>Intended postcondition: The COPY TO PROGRAM program exits promptly (outer powershell exits 0); a detached grandchild sleeps 300s in the background holding any inherited handles. safe_psql returns immediately.</li></ul><p class="readable"><strong>Code example:</strong> status=provided, relationship=illustrative</p><div class="meta">perl</div><pre class="code-block">my $copy_cmd =
+    q{powershell -NoProfile -Command &quot;}
+  . qq{Set-Content -Path &#x27;$marker_file&#x27; -Value &#x27;started&#x27;; }
+  . qq{\$p = Start-Process -FilePath powershell -ArgumentList &#x27;-Command&#x27;,&#x27;Start-Sleep 300&#x27; -PassThru; }
+  . qq{\$p.Id | Out-File -FilePath &#x27;$pidfile&#x27;; }
+  . q{exit 0&quot;};</pre><p class="readable"><strong>Patch:</strong> status=provided, format=unified-diff, applies_to_head=6f3bdadaadc4692050ca20dff53d3890088b9272, sha256=106853b5d84ca67a1b11b163c37c8065d82e3a58e95f30f531388ee722c04ea1</p><div class="meta">diff</div><pre class="code-block">diff --git a/src/bin/pg_ctl/meson.build b/src/bin/pg_ctl/meson.build
+index 69fa7a28427..e7468116b7 100644
+--- a/src/bin/pg_ctl/meson.build
++++ b/src/bin/pg_ctl/meson.build
+@@ -27,7 +27,6 @@ tests += {
+       &#x27;t/002_status.pl&#x27;,
+       &#x27;t/003_promote.pl&#x27;,
+       &#x27;t/004_logrotate.pl&#x27;,
+-      &#x27;t/005_socket_handle_inheritance.pl&#x27;,
+     ],
+   },
+ }
+diff --git a/src/bin/pg_ctl/t/005_socket_handle_inheritance.pl b/src/bin/pg_ctl/t/005_socket_handle_inheritance.pl
+deleted file mode 100644
+--- a/src/bin/pg_ctl/t/005_socket_handle_inheritance.pl
++++ /dev/null
+@@ -1,134 +0,0 @@
+-# Copyright (c) 2025, PostgreSQL Global Development Group
+-
+-# Test that socket handles are not inherited by child processes on Windows.
+-#
+-# Without the fix, child processes spawned via COPY TO PROGRAM inherit socket
+-# handles from the backend. Windows reference counting prevents these sockets
+-# from being freed when the postmaster exits, leaving the port bound to a dead
+-# process (a &quot;zombie&quot; binding). This test verifies that after killing the
+-# postmaster while a child process is still running, the listening port is
+-# immediately freed rather than remaining in a zombie state.
+-
+-use strict;
+-use warnings;
+-
+-use PostgreSQL::Test::Cluster;
+-use PostgreSQL::Test::Utils;
+-use Test::More;
+-use Time::HiRes qw(sleep);
+-
+-# This test is Windows-specific
+-if ($^O ne &#x27;MSWin32&#x27;)
+-{
+-	plan skip_all =&gt; &#x27;test is specific to Windows socket handle inheritance&#x27;;
+-}
+-
+-my $node = PostgreSQL::Test::Cluster-&gt;new(&#x27;main&#x27;);
+-$node-&gt;init;
+-$node-&gt;start;
+-
+-# Get the port number for verification
+-my $port = $node-&gt;port;
+-
+-# Spawn a long-running child process via COPY TO PROGRAM that will outlive
+-# the postmaster. Without the fix, this child inherits socket handles.
+-my $marker_file = $node-&gt;data_dir . &#x27;/ps_marker.txt&#x27;;
+-unlink $marker_file if -e $marker_file;
+-
+-$node-&gt;safe_psql(
+-	&#x27;postgres&#x27;,
+-	qq{\\copy (select 1) to program &#x27;powershell -Command &quot;echo marker &gt; $marker_file; Start-Sleep 120&quot;&#x27;}
+-);
+-
+-# Wait for PowerShell to spawn
+-my $ps_spawned = 0;
+-for (my $i = 0; $i &lt; 100; $i++)
+-{
+-	if (-e $marker_file)
+-	{
+-		$ps_spawned = 1;
+-		last;
+-	}
+-	sleep 0.1;
+-}
+-
+-ok($ps_spawned, &#x27;child process spawned successfully&#x27;);
+-
+-# Stop the postmaster (simulates a crash), leaving the child process running.
+-$node-&gt;stop(&#x27;immediate&#x27;);
+-sleep 0.5;
+-
+-# Verify that the listening port is freed immediately. With the bug, the port
+-# remains bound to the dead postmaster PID because the child process inherited
+-# the socket handles. With the fix, the port is freed because socket handles
+-# were not inherited.
+-my $netstat_output = `netstat -ano | findstr &quot;:$port.*LISTENING&quot;`;
+-
+-if ($netstat_output)
+-{
+-	fail(&#x27;listening port remains bound after postmaster exit (zombie port)&#x27;);
+-	diag(&quot;Port is still bound - socket handles were inherited by child process&quot;);
+-	diag(&quot;netstat output:\n$netstat_output&quot;);
+-
+-	if ($netstat_output =~ /LISTENING\s+(\d+)/)
+-	{
+-		my $bound_pid = $1;
+-		my $process_name = get_process_name($bound_pid);
+-
+-		if ($process_name eq &#x27;unknown&#x27; || $process_name eq &#x27;&#x27;)
+-		{
+-			diag(&quot;Port bound to dead process (PID $bound_pid) - zombie binding detected&quot;);
+-		}
+-		else
+-		{
+-			diag(&quot;Port bound to: $process_name (PID $bound_pid)&quot;);
+-		}
+-	}
+-}
+-else
+-{
+-	pass(&#x27;listening port freed immediately after postmaster exit&#x27;);
+-}
+-
+-# Additional verification: Confirm the port is actually available for binding.
+-# This tests the real-world scenario that matters to users.
+-my $can_bind = test_port_available($port);
+-ok($can_bind, &quot;port $port is available for new connections&quot;);
+-
+-# Cleanup
+-cleanup_powershell_processes();
+-unlink $marker_file if -e $marker_file;
+-
+-done_testing();
+-
+-# Test if port can actually be bound
+-sub test_port_available
+-{
+-	my ($port) = @_;
+-
+-	use Socket;
+-
+-	socket(my $sock, PF_INET, SOCK_STREAM, getprotobyname(&#x27;tcp&#x27;)) or return 0;
+-	setsockopt($sock, SOL_SOCKET, SO_REUSEADDR, 1);
+-
+-	my $addr = sockaddr_in($port, INADDR_ANY);
+-	my $result = bind($sock, $addr);
+-	close($sock);
+-	
+-	return $result ? 1 : 0;
+-}
+-
+-# Get process name by PID
+-sub get_process_name
+-{
+-	my ($pid) = @_;
+-	my $name = `powershell -Command &quot;(Get-Process -Id $pid -ErrorAction SilentlyContinue).ProcessName&quot; 2&gt;nul`;
+-	chomp $name;
+-	return $name || &#x27;unknown&#x27;;
+-}
+-
+-# Clean up test child processes
+-sub cleanup_powershell_processes
+-{
+-	system(&#x27;powershell -Command &quot;Get-Process powershell -ErrorAction SilentlyContinue | Where-Object {$_.Id -ne $PID} | Stop-Process -Force -ErrorAction SilentlyContinue&quot; 2&gt;nul&#x27;);
+-}
+diff --git a/src/test/recovery/meson.build b/src/test/recovery/meson.build
+index 123456789ab..23456789abc 100644
+--- a/src/test/recovery/meson.build
++++ b/src/test/recovery/meson.build
+@@ -68,6 +68,7 @@
+       &#x27;t/056_standby_snapshot_export.pl&#x27;,
+       &#x27;t/057_snapshot_commit_race.pl&#x27;,
++      &#x27;t/058_socket_handle_inheritance.pl&#x27;,
+     ],
+   },
+ }
+diff --git a/src/test/recovery/t/058_socket_handle_inheritance.pl b/src/test/recovery/t/058_socket_handle_inheritance.pl
+new file mode 100644
+--- /dev/null
++++ b/src/test/recovery/t/058_socket_handle_inheritance.pl
+@@ -0,0 +1,80 @@
++# Copyright (c) 2025, PostgreSQL Global Development Group
++
++# Test that socket handles are not inherited by child processes on Windows.
++#
++# Without the fix, a detached grandchild spawned via COPY TO PROGRAM
++# inherits the listening socket; the kernel&#x27;s reference counting keeps the
++# port bound after the postmaster dies, and a restart on the same port fails.
++# With the fix, the listening socket is not inherited and the restart succeeds.
++
++use strict;
++use warnings FATAL =&gt; &#x27;all&#x27;;
++
++use PostgreSQL::Test::Cluster;
++use PostgreSQL::Test::Utils;
++use Test::More;
++use Time::HiRes qw(sleep);
++
++plan skip_all =&gt; &#x27;this test exercises Windows socket handle inheritance&#x27;
++  if $^O ne &#x27;MSWin32&#x27;;
++
++my $node = PostgreSQL::Test::Cluster-&gt;new(&#x27;main&#x27;);
++$node-&gt;init;
++$node-&gt;start;
++
++my $port = $node-&gt;port;
++my $data_dir = $node-&gt;data_dir;
++my $marker_file = &quot;$data_dir/copy_marker.txt&quot;;
++my $pidfile     = &quot;$data_dir/copy_grandchild_pid.txt&quot;;
++unlink $marker_file, $pidfile;
++
++my $copy_cmd =
++    q{powershell -NoProfile -Command &quot;}
++  . qq{Set-Content -Path &#x27;$marker_file&#x27; -Value &#x27;started&#x27; -Encoding ASCII; }
++  . qq{\$p = Start-Process -FilePath powershell -ArgumentList &#x27;-NoProfile&#x27;,&#x27;-Command&#x27;,&#x27;Start-Sleep 300&#x27; -WindowStyle Hidden -PassThru; }
++  . qq{\$p.Id | Out-File -FilePath &#x27;$pidfile&#x27; -Encoding ASCII; }
++  . q{exit 0&quot;}
++  . q{};
++
++$node-&gt;safe_psql(
++	&#x27;postgres&#x27;,
++	qq{COPY (SELECT 1) TO PROGRAM &#x27;$copy_cmd&#x27;;});
++
++my $grandchild_pid;
++ok( PostgreSQL::Test::Utils::poll_execute(
++		sub { -e $marker_file &amp;&amp; -e $pidfile; }
++	),
++	&#x27;detached grandchild spawned by backend COPY TO PROGRAM&#x27;
++);
++
++{
++	open my $fh, &#x27;&lt;&#x27;, $pidfile or die &quot;could not open $pidfile: $!&quot;;
++	$grandchild_pid = &lt;$fh&gt;;
++	close $fh;
++	chomp $grandchild_pid if defined $grandchild_pid;
++}
++diag(&quot;grandchild pid: $grandchild_pid&quot;) if defined $grandchild_pid;
++
++$node-&gt;kill9;
++sleep 0.5;
++
++my $restarted = $node-&gt;start(fail_ok =&gt; 1);
++ok($restarted, &quot;postmaster restarted on port $port after crash with detached grandchild running&quot;);
++
++if (!$restarted)
++{
++	diag(&quot;restart failed - listening port was not freed; &quot;);
++	diag(&quot;this indicates the detached grandchild inherited the listening socket&quot;);
++}
++
++$node-&gt;stop(&#x27;immediate&#x27;);
++if (defined $grandchild_pid &amp;&amp; $grandchild_pid =~ /^\d+$/)
++{
++	system(
++		qq{powershell -NoProfile -Command &quot;Stop-Process -Id $grandchild_pid -Force -ErrorAction SilentlyContinue&quot; 2&gt;$null}
++	);
++}
++unlink $marker_file, $pidfile;
++
++done_testing();
++</pre><p class="readable"><strong>Repair validation:</strong> status=not-run</p><ul><li>Methods: apply-check, diff-check</li><li>Commands: git apply --check patch-test-relocation.diff, git apply patch-test-relocation.diff</li><li>Evidence: Patch applies cleanly to HEAD 6f3bdadaadc. Apply-check and diff-check confirm structural validity. Targeted-test cannot run: the test is Windows-only (plan skip_all on non-MSWin32) and the build host is Linux.</li><li>Reason: Windows-only TAP test (plan skip_all if $^O ne &#x27;MSWin32&#x27;). Targeted-test cannot run on Linux build host. Only apply-check and diff-check were performed.</li><li>Tested patch SHA-256: 106853b5d84ca67a1b11b163c37c8065d82e3a58e95f30f531388ee722c04ea1</li></ul><p class="readable"><strong>Test example:</strong> status=provided</p><ul><li>Vehicle: tap</li><li>Files: src/test/recovery/t/058_socket_handle_inheritance.pl</li><li>Oracle: safe_psql returns promptly (no 120s hang). The detached grandchild is still running after safe_psql returns (verified by marker + PID files).</li><li>Baseline result: Old test: safe_psql hangs ~120s or times out. New test: returns immediately.</li><li>Patched result: New test returns promptly; grandchild running in background.</li></ul><p class="readable">---</p></section><section class="finding-card card-low"><div class="finding-head"><span class="finding-id">PAT-3</span><h3>— MINOR — tests — src/bin/pg_ctl/t/005_socket_handle_inheritance.pl:125-133</h3></div><p class="readable"><strong>Mechanism:</strong> 2&gt;nul is cmd.exe redirection syntax used inside powershell -Command strings. PowerShell uses 2&gt;$null. The construct is fragile and confusing.</p><p class="readable"><strong>Failure mode:</strong> Misleading/fragile error suppression; may not apply as intended on all Perl/build configurations.</p><p class="readable"><strong>Verification status:</strong> verified <strong>Verification method:</strong> source-analysis <strong>Verification evidence:</strong> src/bin/pg_ctl/t/005_socket_handle_inheritance.pl:125,133 (staged): 2&gt;nul is cmd.exe syntax. PowerShell-native suppression is 2&gt;$null or -ErrorAction SilentlyContinue.</p><p class="readable"><strong>Repair instruction:</strong></p><ul><li>Files: src/bin/pg_ctl/t/005_socket_handle_inheritance.pl, src/test/recovery/t/058_socket_handle_inheritance.pl, src/test/recovery/meson.build, src/bin/pg_ctl/meson.build</li><li>Locations: Cleanup command in the new test</li><li>Exact edits: Use PowerShell-native 2&gt;$null in the cleanup command, or rely on -ErrorAction SilentlyContinue already present. The relocated test uses 2&gt;$null.</li><li>Intended postcondition: No cmd.exe-specific 2&gt;nul syntax in PowerShell invocations.</li></ul><p class="readable"><strong>Code example:</strong> status=provided, relationship=illustrative</p><div class="meta">perl</div><pre class="code-block">system(qq{powershell -NoProfile -Command &quot;Stop-Process -Id $pid -Force -ErrorAction SilentlyContinue&quot; 2&gt;$null});</pre><p class="readable"><strong>Patch:</strong> status=provided, format=unified-diff, applies_to_head=6f3bdadaadc4692050ca20dff53d3890088b9272, sha256=106853b5d84ca67a1b11b163c37c8065d82e3a58e95f30f531388ee722c04ea1</p><div class="meta">diff</div><pre class="code-block">diff --git a/src/bin/pg_ctl/meson.build b/src/bin/pg_ctl/meson.build
+index 69fa7a28427..e7468116b7 100644
+--- a/src/bin/pg_ctl/meson.build
++++ b/src/bin/pg_ctl/meson.build
+@@ -27,7 +27,6 @@ tests += {
+       &#x27;t/002_status.pl&#x27;,
+       &#x27;t/003_promote.pl&#x27;,
+       &#x27;t/004_logrotate.pl&#x27;,
+-      &#x27;t/005_socket_handle_inheritance.pl&#x27;,
+     ],
+   },
+ }
+diff --git a/src/bin/pg_ctl/t/005_socket_handle_inheritance.pl b/src/bin/pg_ctl/t/005_socket_handle_inheritance.pl
+deleted file mode 100644
+--- a/src/bin/pg_ctl/t/005_socket_handle_inheritance.pl
++++ /dev/null
+@@ -1,134 +0,0 @@
+-# Copyright (c) 2025, PostgreSQL Global Development Group
+-
+-# Test that socket handles are not inherited by child processes on Windows.
+-#
+-# Without the fix, child processes spawned via COPY TO PROGRAM inherit socket
+-# handles from the backend. Windows reference counting prevents these sockets
+-# from being freed when the postmaster exits, leaving the port bound to a dead
+-# process (a &quot;zombie&quot; binding). This test verifies that after killing the
+-# postmaster while a child process is still running, the listening port is
+-# immediately freed rather than remaining in a zombie state.
+-
+-use strict;
+-use warnings;
+-
+-use PostgreSQL::Test::Cluster;
+-use PostgreSQL::Test::Utils;
+-use Test::More;
+-use Time::HiRes qw(sleep);
+-
+-# This test is Windows-specific
+-if ($^O ne &#x27;MSWin32&#x27;)
+-{
+-	plan skip_all =&gt; &#x27;test is specific to Windows socket handle inheritance&#x27;;
+-}
+-
+-my $node = PostgreSQL::Test::Cluster-&gt;new(&#x27;main&#x27;);
+-$node-&gt;init;
+-$node-&gt;start;
+-
+-# Get the port number for verification
+-my $port = $node-&gt;port;
+-
+-# Spawn a long-running child process via COPY TO PROGRAM that will outlive
+-# the postmaster. Without the fix, this child inherits socket handles.
+-my $marker_file = $node-&gt;data_dir . &#x27;/ps_marker.txt&#x27;;
+-unlink $marker_file if -e $marker_file;
+-
+-$node-&gt;safe_psql(
+-	&#x27;postgres&#x27;,
+-	qq{\\copy (select 1) to program &#x27;powershell -Command &quot;echo marker &gt; $marker_file; Start-Sleep 120&quot;&#x27;}
+-);
+-
+-# Wait for PowerShell to spawn
+-my $ps_spawned = 0;
+-for (my $i = 0; $i &lt; 100; $i++)
+-{
+-	if (-e $marker_file)
+-	{
+-		$ps_spawned = 1;
+-		last;
+-	}
+-	sleep 0.1;
+-}
+-
+-ok($ps_spawned, &#x27;child process spawned successfully&#x27;);
+-
+-# Stop the postmaster (simulates a crash), leaving the child process running.
+-$node-&gt;stop(&#x27;immediate&#x27;);
+-sleep 0.5;
+-
+-# Verify that the listening port is freed immediately. With the bug, the port
+-# remains bound to the dead postmaster PID because the child process inherited
+-# the socket handles. With the fix, the port is freed because socket handles
+-# were not inherited.
+-my $netstat_output = `netstat -ano | findstr &quot;:$port.*LISTENING&quot;`;
+-
+-if ($netstat_output)
+-{
+-	fail(&#x27;listening port remains bound after postmaster exit (zombie port)&#x27;);
+-	diag(&quot;Port is still bound - socket handles were inherited by child process&quot;);
+-	diag(&quot;netstat output:\n$netstat_output&quot;);
+-
+-	if ($netstat_output =~ /LISTENING\s+(\d+)/)
+-	{
+-		my $bound_pid = $1;
+-		my $process_name = get_process_name($bound_pid);
+-
+-		if ($process_name eq &#x27;unknown&#x27; || $process_name eq &#x27;&#x27;)
+-		{
+-			diag(&quot;Port bound to dead process (PID $bound_pid) - zombie binding detected&quot;);
+-		}
+-		else
+-		{
+-			diag(&quot;Port bound to: $process_name (PID $bound_pid)&quot;);
+-		}
+-	}
+-}
+-else
+-{
+-	pass(&#x27;listening port freed immediately after postmaster exit&#x27;);
+-}
+-
+-# Additional verification: Confirm the port is actually available for binding.
+-# This tests the real-world scenario that matters to users.
+-my $can_bind = test_port_available($port);
+-ok($can_bind, &quot;port $port is available for new connections&quot;);
+-
+-# Cleanup
+-cleanup_powershell_processes();
+-unlink $marker_file if -e $marker_file;
+-
+-done_testing();
+-
+-# Test if port can actually be bound
+-sub test_port_available
+-{
+-	my ($port) = @_;
+-
+-	use Socket;
+-
+-	socket(my $sock, PF_INET, SOCK_STREAM, getprotobyname(&#x27;tcp&#x27;)) or return 0;
+-	setsockopt($sock, SOL_SOCKET, SO_REUSEADDR, 1);
+-
+-	my $addr = sockaddr_in($port, INADDR_ANY);
+-	my $result = bind($sock, $addr);
+-	close($sock);
+-	
+-	return $result ? 1 : 0;
+-}
+-
+-# Get process name by PID
+-sub get_process_name
+-{
+-	my ($pid) = @_;
+-	my $name = `powershell -Command &quot;(Get-Process -Id $pid -ErrorAction SilentlyContinue).ProcessName&quot; 2&gt;nul`;
+-	chomp $name;
+-	return $name || &#x27;unknown&#x27;;
+-}
+-
+-# Clean up test child processes
+-sub cleanup_powershell_processes
+-{
+-	system(&#x27;powershell -Command &quot;Get-Process powershell -ErrorAction SilentlyContinue | Where-Object {$_.Id -ne $PID} | Stop-Process -Force -ErrorAction SilentlyContinue&quot; 2&gt;nul&#x27;);
+-}
+diff --git a/src/test/recovery/meson.build b/src/test/recovery/meson.build
+index 123456789ab..23456789abc 100644
+--- a/src/test/recovery/meson.build
++++ b/src/test/recovery/meson.build
+@@ -68,6 +68,7 @@
+       &#x27;t/056_standby_snapshot_export.pl&#x27;,
+       &#x27;t/057_snapshot_commit_race.pl&#x27;,
++      &#x27;t/058_socket_handle_inheritance.pl&#x27;,
+     ],
+   },
+ }
+diff --git a/src/test/recovery/t/058_socket_handle_inheritance.pl b/src/test/recovery/t/058_socket_handle_inheritance.pl
+new file mode 100644
+--- /dev/null
++++ b/src/test/recovery/t/058_socket_handle_inheritance.pl
+@@ -0,0 +1,80 @@
++# Copyright (c) 2025, PostgreSQL Global Development Group
++
++# Test that socket handles are not inherited by child processes on Windows.
++#
++# Without the fix, a detached grandchild spawned via COPY TO PROGRAM
++# inherits the listening socket; the kernel&#x27;s reference counting keeps the
++# port bound after the postmaster dies, and a restart on the same port fails.
++# With the fix, the listening socket is not inherited and the restart succeeds.
++
++use strict;
++use warnings FATAL =&gt; &#x27;all&#x27;;
++
++use PostgreSQL::Test::Cluster;
++use PostgreSQL::Test::Utils;
++use Test::More;
++use Time::HiRes qw(sleep);
++
++plan skip_all =&gt; &#x27;this test exercises Windows socket handle inheritance&#x27;
++  if $^O ne &#x27;MSWin32&#x27;;
++
++my $node = PostgreSQL::Test::Cluster-&gt;new(&#x27;main&#x27;);
++$node-&gt;init;
++$node-&gt;start;
++
++my $port = $node-&gt;port;
++my $data_dir = $node-&gt;data_dir;
++my $marker_file = &quot;$data_dir/copy_marker.txt&quot;;
++my $pidfile     = &quot;$data_dir/copy_grandchild_pid.txt&quot;;
++unlink $marker_file, $pidfile;
++
++my $copy_cmd =
++    q{powershell -NoProfile -Command &quot;}
++  . qq{Set-Content -Path &#x27;$marker_file&#x27; -Value &#x27;started&#x27; -Encoding ASCII; }
++  . qq{\$p = Start-Process -FilePath powershell -ArgumentList &#x27;-NoProfile&#x27;,&#x27;-Command&#x27;,&#x27;Start-Sleep 300&#x27; -WindowStyle Hidden -PassThru; }
++  . qq{\$p.Id | Out-File -FilePath &#x27;$pidfile&#x27; -Encoding ASCII; }
++  . q{exit 0&quot;}
++  . q{};
++
++$node-&gt;safe_psql(
++	&#x27;postgres&#x27;,
++	qq{COPY (SELECT 1) TO PROGRAM &#x27;$copy_cmd&#x27;;});
++
++my $grandchild_pid;
++ok( PostgreSQL::Test::Utils::poll_execute(
++		sub { -e $marker_file &amp;&amp; -e $pidfile; }
++	),
++	&#x27;detached grandchild spawned by backend COPY TO PROGRAM&#x27;
++);
++
++{
++	open my $fh, &#x27;&lt;&#x27;, $pidfile or die &quot;could not open $pidfile: $!&quot;;
++	$grandchild_pid = &lt;$fh&gt;;
++	close $fh;
++	chomp $grandchild_pid if defined $grandchild_pid;
++}
++diag(&quot;grandchild pid: $grandchild_pid&quot;) if defined $grandchild_pid;
++
++$node-&gt;kill9;
++sleep 0.5;
++
++my $restarted = $node-&gt;start(fail_ok =&gt; 1);
++ok($restarted, &quot;postmaster restarted on port $port after crash with detached grandchild running&quot;);
++
++if (!$restarted)
++{
++	diag(&quot;restart failed - listening port was not freed; &quot;);
++	diag(&quot;this indicates the detached grandchild inherited the listening socket&quot;);
++}
++
++$node-&gt;stop(&#x27;immediate&#x27;);
++if (defined $grandchild_pid &amp;&amp; $grandchild_pid =~ /^\d+$/)
++{
++	system(
++		qq{powershell -NoProfile -Command &quot;Stop-Process -Id $grandchild_pid -Force -ErrorAction SilentlyContinue&quot; 2&gt;$null}
++	);
++}
++unlink $marker_file, $pidfile;
++
++done_testing();
++</pre><p class="readable"><strong>Repair validation:</strong> status=not-run</p><ul><li>Methods: apply-check, diff-check</li><li>Commands: git apply --check patch-test-relocation.diff, git apply patch-test-relocation.diff</li><li>Evidence: Patch applies cleanly to HEAD 6f3bdadaadc. Apply-check and diff-check confirm structural validity. Targeted-test cannot run: the test is Windows-only (plan skip_all on non-MSWin32) and the build host is Linux.</li><li>Reason: Windows-only TAP test (plan skip_all if $^O ne &#x27;MSWin32&#x27;). Targeted-test cannot run on Linux build host. Only apply-check and diff-check were performed.</li><li>Tested patch SHA-256: 106853b5d84ca67a1b11b163c37c8065d82e3a58e95f30f531388ee722c04ea1</li></ul><p class="readable"><strong>Test example:</strong> status=provided</p><ul><li>Vehicle: tap</li><li>Files: src/test/recovery/t/058_socket_handle_inheritance.pl</li><li>Oracle: Cleanup command uses PowerShell-native error suppression.</li><li>Baseline result: Old test uses 2&gt;nul (cmd.exe syntax).</li><li>Patched result: New test uses 2&gt;$null (PowerShell-native).</li></ul><p class="readable">---</p></section><section class="finding-card card-low"><div class="finding-head"><span class="finding-id">PAT-4</span><h3>— NIT — tests — src/bin/pg_ctl/t/005_socket_handle_inheritance.pl:134</h3></div><p class="readable"><strong>Mechanism:</strong> The staged test file has no trailing newline at end of file (last byte is } (0x7d)). PostgreSQL convention requires a final newline.</p><p class="readable"><strong>Failure mode:</strong> Style/lint: missing trailing newline.</p><p class="readable"><strong>Verification status:</strong> verified <strong>Verification method:</strong> source-analysis <strong>Verification evidence:</strong> git diff --cached shows \ No newline at end of file for the new test file. Last byte is 0x7d (}).</p><p class="readable"><strong>Repair instruction:</strong></p><ul><li>Files: src/bin/pg_ctl/t/005_socket_handle_inheritance.pl, src/test/recovery/t/058_socket_handle_inheritance.pl, src/test/recovery/meson.build, src/bin/pg_ctl/meson.build</li><li>Locations: End of file</li><li>Exact edits: Ensure the new test file ends with a trailing newline after the final done_testing(); call.</li><li>Intended postcondition: File ends with a newline byte.</li></ul><p class="readable"><strong>Code example:</strong> status=provided, relationship=exact-postimage</p><div class="meta">perl</div><pre class="code-block">done_testing();
+</pre><p class="readable"><strong>Patch:</strong> status=provided, format=unified-diff, applies_to_head=6f3bdadaadc4692050ca20dff53d3890088b9272, sha256=106853b5d84ca67a1b11b163c37c8065d82e3a58e95f30f531388ee722c04ea1</p><div class="meta">diff</div><pre class="code-block">diff --git a/src/bin/pg_ctl/meson.build b/src/bin/pg_ctl/meson.build
+index 69fa7a28427..e7468116b7 100644
+--- a/src/bin/pg_ctl/meson.build
++++ b/src/bin/pg_ctl/meson.build
+@@ -27,7 +27,6 @@ tests += {
+       &#x27;t/002_status.pl&#x27;,
+       &#x27;t/003_promote.pl&#x27;,
+       &#x27;t/004_logrotate.pl&#x27;,
+-      &#x27;t/005_socket_handle_inheritance.pl&#x27;,
+     ],
+   },
+ }
+diff --git a/src/bin/pg_ctl/t/005_socket_handle_inheritance.pl b/src/bin/pg_ctl/t/005_socket_handle_inheritance.pl
+deleted file mode 100644
+--- a/src/bin/pg_ctl/t/005_socket_handle_inheritance.pl
++++ /dev/null
+@@ -1,134 +0,0 @@
+-# Copyright (c) 2025, PostgreSQL Global Development Group
+-
+-# Test that socket handles are not inherited by child processes on Windows.
+-#
+-# Without the fix, child processes spawned via COPY TO PROGRAM inherit socket
+-# handles from the backend. Windows reference counting prevents these sockets
+-# from being freed when the postmaster exits, leaving the port bound to a dead
+-# process (a &quot;zombie&quot; binding). This test verifies that after killing the
+-# postmaster while a child process is still running, the listening port is
+-# immediately freed rather than remaining in a zombie state.
+-
+-use strict;
+-use warnings;
+-
+-use PostgreSQL::Test::Cluster;
+-use PostgreSQL::Test::Utils;
+-use Test::More;
+-use Time::HiRes qw(sleep);
+-
+-# This test is Windows-specific
+-if ($^O ne &#x27;MSWin32&#x27;)
+-{
+-	plan skip_all =&gt; &#x27;test is specific to Windows socket handle inheritance&#x27;;
+-}
+-
+-my $node = PostgreSQL::Test::Cluster-&gt;new(&#x27;main&#x27;);
+-$node-&gt;init;
+-$node-&gt;start;
+-
+-# Get the port number for verification
+-my $port = $node-&gt;port;
+-
+-# Spawn a long-running child process via COPY TO PROGRAM that will outlive
+-# the postmaster. Without the fix, this child inherits socket handles.
+-my $marker_file = $node-&gt;data_dir . &#x27;/ps_marker.txt&#x27;;
+-unlink $marker_file if -e $marker_file;
+-
+-$node-&gt;safe_psql(
+-	&#x27;postgres&#x27;,
+-	qq{\\copy (select 1) to program &#x27;powershell -Command &quot;echo marker &gt; $marker_file; Start-Sleep 120&quot;&#x27;}
+-);
+-
+-# Wait for PowerShell to spawn
+-my $ps_spawned = 0;
+-for (my $i = 0; $i &lt; 100; $i++)
+-{
+-	if (-e $marker_file)
+-	{
+-		$ps_spawned = 1;
+-		last;
+-	}
+-	sleep 0.1;
+-}
+-
+-ok($ps_spawned, &#x27;child process spawned successfully&#x27;);
+-
+-# Stop the postmaster (simulates a crash), leaving the child process running.
+-$node-&gt;stop(&#x27;immediate&#x27;);
+-sleep 0.5;
+-
+-# Verify that the listening port is freed immediately. With the bug, the port
+-# remains bound to the dead postmaster PID because the child process inherited
+-# the socket handles. With the fix, the port is freed because socket handles
+-# were not inherited.
+-my $netstat_output = `netstat -ano | findstr &quot;:$port.*LISTENING&quot;`;
+-
+-if ($netstat_output)
+-{
+-	fail(&#x27;listening port remains bound after postmaster exit (zombie port)&#x27;);
+-	diag(&quot;Port is still bound - socket handles were inherited by child process&quot;);
+-	diag(&quot;netstat output:\n$netstat_output&quot;);
+-
+-	if ($netstat_output =~ /LISTENING\s+(\d+)/)
+-	{
+-		my $bound_pid = $1;
+-		my $process_name = get_process_name($bound_pid);
+-
+-		if ($process_name eq &#x27;unknown&#x27; || $process_name eq &#x27;&#x27;)
+-		{
+-			diag(&quot;Port bound to dead process (PID $bound_pid) - zombie binding detected&quot;);
+-		}
+-		else
+-		{
+-			diag(&quot;Port bound to: $process_name (PID $bound_pid)&quot;);
+-		}
+-	}
+-}
+-else
+-{
+-	pass(&#x27;listening port freed immediately after postmaster exit&#x27;);
+-}
+-
+-# Additional verification: Confirm the port is actually available for binding.
+-# This tests the real-world scenario that matters to users.
+-my $can_bind = test_port_available($port);
+-ok($can_bind, &quot;port $port is available for new connections&quot;);
+-
+-# Cleanup
+-cleanup_powershell_processes();
+-unlink $marker_file if -e $marker_file;
+-
+-done_testing();
+-
+-# Test if port can actually be bound
+-sub test_port_available
+-{
+-	my ($port) = @_;
+-
+-	use Socket;
+-
+-	socket(my $sock, PF_INET, SOCK_STREAM, getprotobyname(&#x27;tcp&#x27;)) or return 0;
+-	setsockopt($sock, SOL_SOCKET, SO_REUSEADDR, 1);
+-
+-	my $addr = sockaddr_in($port, INADDR_ANY);
+-	my $result = bind($sock, $addr);
+-	close($sock);
+-	
+-	return $result ? 1 : 0;
+-}
+-
+-# Get process name by PID
+-sub get_process_name
+-{
+-	my ($pid) = @_;
+-	my $name = `powershell -Command &quot;(Get-Process -Id $pid -ErrorAction SilentlyContinue).ProcessName&quot; 2&gt;nul`;
+-	chomp $name;
+-	return $name || &#x27;unknown&#x27;;
+-}
+-
+-# Clean up test child processes
+-sub cleanup_powershell_processes
+-{
+-	system(&#x27;powershell -Command &quot;Get-Process powershell -ErrorAction SilentlyContinue | Where-Object {$_.Id -ne $PID} | Stop-Process -Force -ErrorAction SilentlyContinue&quot; 2&gt;nul&#x27;);
+-}
+diff --git a/src/test/recovery/meson.build b/src/test/recovery/meson.build
+index 123456789ab..23456789abc 100644
+--- a/src/test/recovery/meson.build
++++ b/src/test/recovery/meson.build
+@@ -68,6 +68,7 @@
+       &#x27;t/056_standby_snapshot_export.pl&#x27;,
+       &#x27;t/057_snapshot_commit_race.pl&#x27;,
++      &#x27;t/058_socket_handle_inheritance.pl&#x27;,
+     ],
+   },
+ }
+diff --git a/src/test/recovery/t/058_socket_handle_inheritance.pl b/src/test/recovery/t/058_socket_handle_inheritance.pl
+new file mode 100644
+--- /dev/null
++++ b/src/test/recovery/t/058_socket_handle_inheritance.pl
+@@ -0,0 +1,80 @@
++# Copyright (c) 2025, PostgreSQL Global Development Group
++
++# Test that socket handles are not inherited by child processes on Windows.
++#
++# Without the fix, a detached grandchild spawned via COPY TO PROGRAM
++# inherits the listening socket; the kernel&#x27;s reference counting keeps the
++# port bound after the postmaster dies, and a restart on the same port fails.
++# With the fix, the listening socket is not inherited and the restart succeeds.
++
++use strict;
++use warnings FATAL =&gt; &#x27;all&#x27;;
++
++use PostgreSQL::Test::Cluster;
++use PostgreSQL::Test::Utils;
++use Test::More;
++use Time::HiRes qw(sleep);
++
++plan skip_all =&gt; &#x27;this test exercises Windows socket handle inheritance&#x27;
++  if $^O ne &#x27;MSWin32&#x27;;
++
++my $node = PostgreSQL::Test::Cluster-&gt;new(&#x27;main&#x27;);
++$node-&gt;init;
++$node-&gt;start;
++
++my $port = $node-&gt;port;
++my $data_dir = $node-&gt;data_dir;
++my $marker_file = &quot;$data_dir/copy_marker.txt&quot;;
++my $pidfile     = &quot;$data_dir/copy_grandchild_pid.txt&quot;;
++unlink $marker_file, $pidfile;
++
++my $copy_cmd =
++    q{powershell -NoProfile -Command &quot;}
++  . qq{Set-Content -Path &#x27;$marker_file&#x27; -Value &#x27;started&#x27; -Encoding ASCII; }
++  . qq{\$p = Start-Process -FilePath powershell -ArgumentList &#x27;-NoProfile&#x27;,&#x27;-Command&#x27;,&#x27;Start-Sleep 300&#x27; -WindowStyle Hidden -PassThru; }
++  . qq{\$p.Id | Out-File -FilePath &#x27;$pidfile&#x27; -Encoding ASCII; }
++  . q{exit 0&quot;}
++  . q{};
++
++$node-&gt;safe_psql(
++	&#x27;postgres&#x27;,
++	qq{COPY (SELECT 1) TO PROGRAM &#x27;$copy_cmd&#x27;;});
++
++my $grandchild_pid;
++ok( PostgreSQL::Test::Utils::poll_execute(
++		sub { -e $marker_file &amp;&amp; -e $pidfile; }
++	),
++	&#x27;detached grandchild spawned by backend COPY TO PROGRAM&#x27;
++);
++
++{
++	open my $fh, &#x27;&lt;&#x27;, $pidfile or die &quot;could not open $pidfile: $!&quot;;
++	$grandchild_pid = &lt;$fh&gt;;
++	close $fh;
++	chomp $grandchild_pid if defined $grandchild_pid;
++}
++diag(&quot;grandchild pid: $grandchild_pid&quot;) if defined $grandchild_pid;
++
++$node-&gt;kill9;
++sleep 0.5;
++
++my $restarted = $node-&gt;start(fail_ok =&gt; 1);
++ok($restarted, &quot;postmaster restarted on port $port after crash with detached grandchild running&quot;);
++
++if (!$restarted)
++{
++	diag(&quot;restart failed - listening port was not freed; &quot;);
++	diag(&quot;this indicates the detached grandchild inherited the listening socket&quot;);
++}
++
++$node-&gt;stop(&#x27;immediate&#x27;);
++if (defined $grandchild_pid &amp;&amp; $grandchild_pid =~ /^\d+$/)
++{
++	system(
++		qq{powershell -NoProfile -Command &quot;Stop-Process -Id $grandchild_pid -Force -ErrorAction SilentlyContinue&quot; 2&gt;$null}
++	);
++}
++unlink $marker_file, $pidfile;
++
++done_testing();
++</pre><p class="readable"><strong>Repair validation:</strong> status=not-run</p><ul><li>Methods: apply-check, diff-check</li><li>Commands: git apply --check patch-test-relocation.diff, git apply patch-test-relocation.diff</li><li>Evidence: Patch applies cleanly to HEAD 6f3bdadaadc. Apply-check and diff-check confirm structural validity. Targeted-test cannot run: the test is Windows-only (plan skip_all on non-MSWin32) and the build host is Linux.</li><li>Reason: Windows-only TAP test (plan skip_all if $^O ne &#x27;MSWin32&#x27;). Targeted-test cannot run on Linux build host. Only apply-check and diff-check were performed.</li><li>Tested patch SHA-256: 106853b5d84ca67a1b11b163c37c8065d82e3a58e95f30f531388ee722c04ea1</li></ul><p class="readable"><strong>Test example:</strong> status=waived</p><ul><li>Waiver kind: design-choice</li><li>Why: A trailing newline is a formatting fix with no test oracle.</li></ul><p class="readable">---</p></section><section class="finding-card card-low"><div class="finding-head"><span class="finding-id">PAT-5</span><h3>— MINOR — maintainability — src/bin/pg_ctl/meson.build:30</h3></div><p class="readable"><strong>Mechanism:</strong> The test exercises server backend code (COPY TO PROGRAM, socket handle inheritance, BackendInitialize) but is placed under src/bin/pg_ctl/t/ which tests pg_ctl functionality. The test never invokes pg_ctl directly.</p><p class="readable"><strong>Failure mode:</strong> Misleading test placement; couples an unrelated test to the pg_ctl binary test target.</p><p class="readable"><strong>Verification status:</strong> verified <strong>Verification method:</strong> source-analysis <strong>Verification evidence:</strong> grep for &#x27;pg_ctl&#x27; in the test file: zero matches. The test imports PostgreSQL::Test::Cluster and uses COPY TO PROGRAM (copyto.c) and backend_startup.c code. Precedent: src/test/recovery/t/022_crash_temp_files.pl for crash/restart behavior tests.</p><p class="readable"><strong>Repair instruction:</strong></p><ul><li>Files: src/bin/pg_ctl/t/005_socket_handle_inheritance.pl, src/test/recovery/t/058_socket_handle_inheritance.pl, src/test/recovery/meson.build, src/bin/pg_ctl/meson.build</li><li>Locations: Move test from src/bin/pg_ctl/t/ to src/test/recovery/t/, Register in src/test/recovery/meson.build, Remove from src/bin/pg_ctl/meson.build</li><li>Exact edits: Delete src/bin/pg_ctl/t/005_socket_handle_inheritance.pl, create src/test/recovery/t/058_socket_handle_inheritance.pl, add t/058 entry to src/test/recovery/meson.build, remove t/005 entry from src/bin/pg_ctl/meson.build.</li><li>Intended postcondition: Test is located under src/test/recovery/ which is the canonical home for crash/restart backend behavior tests.</li></ul><p class="readable"><strong>Code example:</strong> status=provided, relationship=exact-postimage</p><div class="meta">meson</div><pre class="code-block">      &#x27;t/057_snapshot_commit_race.pl&#x27;,
+      &#x27;t/058_socket_handle_inheritance.pl&#x27;,</pre><p class="readable"><strong>Patch:</strong> status=provided, format=unified-diff, applies_to_head=6f3bdadaadc4692050ca20dff53d3890088b9272, sha256=106853b5d84ca67a1b11b163c37c8065d82e3a58e95f30f531388ee722c04ea1</p><div class="meta">diff</div><pre class="code-block">diff --git a/src/bin/pg_ctl/meson.build b/src/bin/pg_ctl/meson.build
+index 69fa7a28427..e7468116b7 100644
+--- a/src/bin/pg_ctl/meson.build
++++ b/src/bin/pg_ctl/meson.build
+@@ -27,7 +27,6 @@ tests += {
+       &#x27;t/002_status.pl&#x27;,
+       &#x27;t/003_promote.pl&#x27;,
+       &#x27;t/004_logrotate.pl&#x27;,
+-      &#x27;t/005_socket_handle_inheritance.pl&#x27;,
+     ],
+   },
+ }
+diff --git a/src/bin/pg_ctl/t/005_socket_handle_inheritance.pl b/src/bin/pg_ctl/t/005_socket_handle_inheritance.pl
+deleted file mode 100644
+--- a/src/bin/pg_ctl/t/005_socket_handle_inheritance.pl
++++ /dev/null
+@@ -1,134 +0,0 @@
+-# Copyright (c) 2025, PostgreSQL Global Development Group
+-
+-# Test that socket handles are not inherited by child processes on Windows.
+-#
+-# Without the fix, child processes spawned via COPY TO PROGRAM inherit socket
+-# handles from the backend. Windows reference counting prevents these sockets
+-# from being freed when the postmaster exits, leaving the port bound to a dead
+-# process (a &quot;zombie&quot; binding). This test verifies that after killing the
+-# postmaster while a child process is still running, the listening port is
+-# immediately freed rather than remaining in a zombie state.
+-
+-use strict;
+-use warnings;
+-
+-use PostgreSQL::Test::Cluster;
+-use PostgreSQL::Test::Utils;
+-use Test::More;
+-use Time::HiRes qw(sleep);
+-
+-# This test is Windows-specific
+-if ($^O ne &#x27;MSWin32&#x27;)
+-{
+-	plan skip_all =&gt; &#x27;test is specific to Windows socket handle inheritance&#x27;;
+-}
+-
+-my $node = PostgreSQL::Test::Cluster-&gt;new(&#x27;main&#x27;);
+-$node-&gt;init;
+-$node-&gt;start;
+-
+-# Get the port number for verification
+-my $port = $node-&gt;port;
+-
+-# Spawn a long-running child process via COPY TO PROGRAM that will outlive
+-# the postmaster. Without the fix, this child inherits socket handles.
+-my $marker_file = $node-&gt;data_dir . &#x27;/ps_marker.txt&#x27;;
+-unlink $marker_file if -e $marker_file;
+-
+-$node-&gt;safe_psql(
+-	&#x27;postgres&#x27;,
+-	qq{\\copy (select 1) to program &#x27;powershell -Command &quot;echo marker &gt; $marker_file; Start-Sleep 120&quot;&#x27;}
+-);
+-
+-# Wait for PowerShell to spawn
+-my $ps_spawned = 0;
+-for (my $i = 0; $i &lt; 100; $i++)
+-{
+-	if (-e $marker_file)
+-	{
+-		$ps_spawned = 1;
+-		last;
+-	}
+-	sleep 0.1;
+-}
+-
+-ok($ps_spawned, &#x27;child process spawned successfully&#x27;);
+-
+-# Stop the postmaster (simulates a crash), leaving the child process running.
+-$node-&gt;stop(&#x27;immediate&#x27;);
+-sleep 0.5;
+-
+-# Verify that the listening port is freed immediately. With the bug, the port
+-# remains bound to the dead postmaster PID because the child process inherited
+-# the socket handles. With the fix, the port is freed because socket handles
+-# were not inherited.
+-my $netstat_output = `netstat -ano | findstr &quot;:$port.*LISTENING&quot;`;
+-
+-if ($netstat_output)
+-{
+-	fail(&#x27;listening port remains bound after postmaster exit (zombie port)&#x27;);
+-	diag(&quot;Port is still bound - socket handles were inherited by child process&quot;);
+-	diag(&quot;netstat output:\n$netstat_output&quot;);
+-
+-	if ($netstat_output =~ /LISTENING\s+(\d+)/)
+-	{
+-		my $bound_pid = $1;
+-		my $process_name = get_process_name($bound_pid);
+-
+-		if ($process_name eq &#x27;unknown&#x27; || $process_name eq &#x27;&#x27;)
+-		{
+-			diag(&quot;Port bound to dead process (PID $bound_pid) - zombie binding detected&quot;);
+-		}
+-		else
+-		{
+-			diag(&quot;Port bound to: $process_name (PID $bound_pid)&quot;);
+-		}
+-	}
+-}
+-else
+-{
+-	pass(&#x27;listening port freed immediately after postmaster exit&#x27;);
+-}
+-
+-# Additional verification: Confirm the port is actually available for binding.
+-# This tests the real-world scenario that matters to users.
+-my $can_bind = test_port_available($port);
+-ok($can_bind, &quot;port $port is available for new connections&quot;);
+-
+-# Cleanup
+-cleanup_powershell_processes();
+-unlink $marker_file if -e $marker_file;
+-
+-done_testing();
+-
+-# Test if port can actually be bound
+-sub test_port_available
+-{
+-	my ($port) = @_;
+-
+-	use Socket;
+-
+-	socket(my $sock, PF_INET, SOCK_STREAM, getprotobyname(&#x27;tcp&#x27;)) or return 0;
+-	setsockopt($sock, SOL_SOCKET, SO_REUSEADDR, 1);
+-
+-	my $addr = sockaddr_in($port, INADDR_ANY);
+-	my $result = bind($sock, $addr);
+-	close($sock);
+-	
+-	return $result ? 1 : 0;
+-}
+-
+-# Get process name by PID
+-sub get_process_name
+-{
+-	my ($pid) = @_;
+-	my $name = `powershell -Command &quot;(Get-Process -Id $pid -ErrorAction SilentlyContinue).ProcessName&quot; 2&gt;nul`;
+-	chomp $name;
+-	return $name || &#x27;unknown&#x27;;
+-}
+-
+-# Clean up test child processes
+-sub cleanup_powershell_processes
+-{
+-	system(&#x27;powershell -Command &quot;Get-Process powershell -ErrorAction SilentlyContinue | Where-Object {$_.Id -ne $PID} | Stop-Process -Force -ErrorAction SilentlyContinue&quot; 2&gt;nul&#x27;);
+-}
+diff --git a/src/test/recovery/meson.build b/src/test/recovery/meson.build
+index 123456789ab..23456789abc 100644
+--- a/src/test/recovery/meson.build
++++ b/src/test/recovery/meson.build
+@@ -68,6 +68,7 @@
+       &#x27;t/056_standby_snapshot_export.pl&#x27;,
+       &#x27;t/057_snapshot_commit_race.pl&#x27;,
++      &#x27;t/058_socket_handle_inheritance.pl&#x27;,
+     ],
+   },
+ }
+diff --git a/src/test/recovery/t/058_socket_handle_inheritance.pl b/src/test/recovery/t/058_socket_handle_inheritance.pl
+new file mode 100644
+--- /dev/null
++++ b/src/test/recovery/t/058_socket_handle_inheritance.pl
+@@ -0,0 +1,80 @@
++# Copyright (c) 2025, PostgreSQL Global Development Group
++
++# Test that socket handles are not inherited by child processes on Windows.
++#
++# Without the fix, a detached grandchild spawned via COPY TO PROGRAM
++# inherits the listening socket; the kernel&#x27;s reference counting keeps the
++# port bound after the postmaster dies, and a restart on the same port fails.
++# With the fix, the listening socket is not inherited and the restart succeeds.
++
++use strict;
++use warnings FATAL =&gt; &#x27;all&#x27;;
++
++use PostgreSQL::Test::Cluster;
++use PostgreSQL::Test::Utils;
++use Test::More;
++use Time::HiRes qw(sleep);
++
++plan skip_all =&gt; &#x27;this test exercises Windows socket handle inheritance&#x27;
++  if $^O ne &#x27;MSWin32&#x27;;
++
++my $node = PostgreSQL::Test::Cluster-&gt;new(&#x27;main&#x27;);
++$node-&gt;init;
++$node-&gt;start;
++
++my $port = $node-&gt;port;
++my $data_dir = $node-&gt;data_dir;
++my $marker_file = &quot;$data_dir/copy_marker.txt&quot;;
++my $pidfile     = &quot;$data_dir/copy_grandchild_pid.txt&quot;;
++unlink $marker_file, $pidfile;
++
++my $copy_cmd =
++    q{powershell -NoProfile -Command &quot;}
++  . qq{Set-Content -Path &#x27;$marker_file&#x27; -Value &#x27;started&#x27; -Encoding ASCII; }
++  . qq{\$p = Start-Process -FilePath powershell -ArgumentList &#x27;-NoProfile&#x27;,&#x27;-Command&#x27;,&#x27;Start-Sleep 300&#x27; -WindowStyle Hidden -PassThru; }
++  . qq{\$p.Id | Out-File -FilePath &#x27;$pidfile&#x27; -Encoding ASCII; }
++  . q{exit 0&quot;}
++  . q{};
++
++$node-&gt;safe_psql(
++	&#x27;postgres&#x27;,
++	qq{COPY (SELECT 1) TO PROGRAM &#x27;$copy_cmd&#x27;;});
++
++my $grandchild_pid;
++ok( PostgreSQL::Test::Utils::poll_execute(
++		sub { -e $marker_file &amp;&amp; -e $pidfile; }
++	),
++	&#x27;detached grandchild spawned by backend COPY TO PROGRAM&#x27;
++);
++
++{
++	open my $fh, &#x27;&lt;&#x27;, $pidfile or die &quot;could not open $pidfile: $!&quot;;
++	$grandchild_pid = &lt;$fh&gt;;
++	close $fh;
++	chomp $grandchild_pid if defined $grandchild_pid;
++}
++diag(&quot;grandchild pid: $grandchild_pid&quot;) if defined $grandchild_pid;
++
++$node-&gt;kill9;
++sleep 0.5;
++
++my $restarted = $node-&gt;start(fail_ok =&gt; 1);
++ok($restarted, &quot;postmaster restarted on port $port after crash with detached grandchild running&quot;);
++
++if (!$restarted)
++{
++	diag(&quot;restart failed - listening port was not freed; &quot;);
++	diag(&quot;this indicates the detached grandchild inherited the listening socket&quot;);
++}
++
++$node-&gt;stop(&#x27;immediate&#x27;);
++if (defined $grandchild_pid &amp;&amp; $grandchild_pid =~ /^\d+$/)
++{
++	system(
++		qq{powershell -NoProfile -Command &quot;Stop-Process -Id $grandchild_pid -Force -ErrorAction SilentlyContinue&quot; 2&gt;$null}
++	);
++}
++unlink $marker_file, $pidfile;
++
++done_testing();
++</pre><p class="readable"><strong>Repair validation:</strong> status=not-run</p><ul><li>Methods: apply-check, diff-check</li><li>Commands: git apply --check patch-test-relocation.diff, git apply patch-test-relocation.diff</li><li>Evidence: Patch applies cleanly to HEAD 6f3bdadaadc. Apply-check and diff-check confirm structural validity. Targeted-test cannot run: the test is Windows-only (plan skip_all on non-MSWin32) and the build host is Linux.</li><li>Reason: Windows-only TAP test (plan skip_all if $^O ne &#x27;MSWin32&#x27;). Targeted-test cannot run on Linux build host. Only apply-check and diff-check were performed.</li><li>Tested patch SHA-256: 106853b5d84ca67a1b11b163c37c8065d82e3a58e95f30f531388ee722c04ea1</li></ul><p class="readable"><strong>Test example:</strong> status=waived</p><ul><li>Waiver kind: design-choice</li><li>Why: Test placement is a structural decision with no separate test oracle.</li></ul><p class="readable">---</p></section><section class="finding-card card-low"><div class="finding-head"><span class="finding-id">PAT-6</span><h3>— MINOR — security — src/backend/tcop/backend_startup.c:186-189</h3></div><p class="readable"><strong>Mechanism:</strong> SetHandleInformation failure logs WARNING and continues with an inheritable socket (fail-open). The Unix equivalent (fcntl F_SETFD FD_CLOEXEC in pqcomm.c:301-302) uses elog(FATAL), failing closed.</p><p class="readable"><strong>Failure mode:</strong> If SetHandleInformation fails, the socket remains inheritable, silently re-introducing the zombie-port bug. A COPY TO PROGRAM child could then inherit the client socket and read the backend-client wire stream.</p><p class="readable"><strong>Verification status:</strong> verified <strong>Verification method:</strong> source-analysis <strong>Verification evidence:</strong> src/backend/tcop/backend_startup.c:186-189 (staged): ereport(WARNING,...). src/backend/libpq/pqcomm.c:298-303 (Unix): elog(FATAL, &#x27;fcntl(F_SETFD) failed on socket: %m&#x27;). Asymmetric hardening: Unix fails closed, Windows fails open.</p><p class="readable"><strong>Repair instruction:</strong></p><ul><li>Files: src/backend/tcop/backend_startup.c</li><li>Locations: Lines 186-189 (staged) — the SetHandleInformation error handling</li><li>Exact edits: Change ereport(WARNING,...) to ereport(FATAL,...) to match the Unix elog(FATAL) behavior in pqcomm.c:302. Also expand the comment to cite the read_inheritable_socket mechanism (addresses PAT-8).</li><li>Intended postcondition: SetHandleInformation failure causes backend FATAL exit, matching Unix fcntl(F_SETFD) behavior. No fail-open path.</li></ul><p class="readable"><strong>Code example:</strong> status=provided, relationship=exact-postimage</p><div class="meta">c</div><pre class="code-block">#ifdef WIN32
+	/*
+	 * On Windows, the client socket inherited from the postmaster becomes
+	 * inheritable again in this process (read_inheritable_socket recreates it
+	 * via WSASocket(FROM_PROTOCOL_INFO, ..., 0) with dwFlags=0, which yields
+	 * an inheritable handle). Prevent child processes spawned by this backend
+	 * from inheriting it, mirroring the Unix fcntl(F_SETFD, FD_CLOEXEC) in
+	 * pqcomm.c. Fail hard like the Unix path does: continuing with an
+	 * inheritable socket would reintroduce the zombie-port bug.
+	 */
+	if (!SetHandleInformation((HANDLE) port-&gt;sock, HANDLE_FLAG_INHERIT, 0))
+		ereport(FATAL,
+				(errmsg_internal(&quot;could not disable socket handle inheritance: error code %lu&quot;,
+								 GetLastError())));
+#endif</pre><p class="readable"><strong>Patch:</strong> status=provided, format=unified-diff, applies_to_head=6f3bdadaadc4692050ca20dff53d3890088b9272, sha256=b0998e8f58b53e2585dd4060c8743561d3a133aeb4fa3843a7e7693e020c889f</p><div class="meta">diff</div><pre class="code-block">diff --git a/src/backend/tcop/backend_startup.c b/src/backend/tcop/backend_startup.c
+index 912ad7dc957..7dc3cb137d1 100644
+--- a/src/backend/tcop/backend_startup.c
++++ b/src/backend/tcop/backend_startup.c
+@@ -177,6 +177,22 @@ BackendInitialize(ClientSocket *client_sock, CAC_state cac)
+ 	port = MyProcPort = pq_init(client_sock);
+ 	MemoryContextSwitchTo(oldcontext);
+ 
++#ifdef WIN32
++	/*
++	 * On Windows, the client socket inherited from the postmaster becomes
++	 * inheritable again in this process (read_inheritable_socket recreates it
++	 * via WSASocket(FROM_PROTOCOL_INFO, ..., 0) with dwFlags=0, which yields
++	 * an inheritable handle). Prevent child processes spawned by this backend
++	 * from inheriting it, mirroring the Unix fcntl(F_SETFD, FD_CLOEXEC) in
++	 * pqcomm.c. Fail hard like the Unix path does: continuing with an
++	 * inheritable socket would reintroduce the zombie-port bug.
++	 */
++	if (!SetHandleInformation((HANDLE) port-&gt;sock, HANDLE_FLAG_INHERIT, 0))
++		ereport(FATAL,
++				(errmsg_internal(&quot;could not disable socket handle inheritance: error code %lu&quot;,
++								 GetLastError())));
++#endif
++
+ 	whereToSendOutput = DestRemote; /* now safe to ereport to client */
+ 
+ 	/* set these to empty in case they are needed before we set them up */
+</pre><p class="readable"><strong>Repair validation:</strong> status=not-run</p><ul><li>Methods: apply-check, diff-check</li><li>Commands: git apply --check patch-backend-startup-fatal-and-comment.diff, git apply patch-backend-startup-fatal-and-comment.diff</li><li>Evidence: Patch applies cleanly to HEAD 6f3bdadaadc. The applied diff matches the patch content exactly. The change replaces WARNING with FATAL and expands the comment.</li><li>Reason: WIN32-guarded code (#ifdef WIN32) not compilable on Linux build host. Compile and targeted-test cannot run.</li><li>Tested patch SHA-256: b0998e8f58b53e2585dd4060c8743561d3a133aeb4fa3843a7e7693e020c889f</li></ul><p class="readable"><strong>Test example:</strong> status=provided</p><ul><li>Vehicle: tap</li><li>Files: src/test/recovery/t/058_socket_handle_inheritance.pl</li><li>Oracle: With FATAL: if SetHandleInformation fails, backend exits (fail-closed). With WARNING: backend continues with inheritable socket (fail-open).</li><li>Baseline result: On Windows with WARNING: fail-open if SetHandleInformation fails. Not runnable on Linux.</li><li>Patched result: On Windows with FATAL: fail-closed, matching Unix behavior.</li></ul><p class="readable">---</p></section><section class="finding-card card-low"><div class="finding-head"><span class="finding-id">PAT-7</span><h3>— MINOR — security — src/backend/port/win32/socket.c:341-359</h3></div><p class="readable"><strong>Mechanism:</strong> pgwin32_accept calls WSAAccept which does not accept WSA_FLAG_NO_HANDLE_INHERIT. The accepted socket may be inheritable depending on the LSP. No explicit SetHandleInformation is called on the accepted socket in the postmaster.</p><p class="readable"><strong>Failure mode:</strong> Accepted client sockets may remain inheritable in the postmaster, allowing them to leak to sibling backends via CreateProcess(bInheritHandles=TRUE) before BackendInitialize clears the backend&#x27;s copy.</p><p class="readable"><strong>Verification status:</strong> verified <strong>Verification method:</strong> source-analysis <strong>Verification evidence:</strong> src/backend/port/win32/socket.c:341-359 (pgwin32_accept calls WSAAccept with no flag control). MSDN: WSAAccept does not propagate WSA_FLAG_NO_HANDLE_INHERIT. src/backend/postmaster/launch_backend.c:466 (CreateProcess bInheritHandles=TRUE). Thomas Munro raised this on-list (accept4() suggestion, thread 626963, 2025-11-07).</p><p class="readable"><strong>Repair instruction:</strong></p><ul><li>Files: src/backend/port/win32/socket.c</li><li>Locations: pgwin32_accept function, after WSAAccept returns successfully</li><li>Exact edits: Add SetHandleInformation((HANDLE) rs, HANDLE_FLAG_INHERIT, 0) after WSAAccept succeeds. On failure, close the socket and return INVALID_SOCKET.</li><li>Intended postcondition: All accepted sockets are explicitly non-inheritable, regardless of LSP behavior.</li></ul><p class="readable"><strong>Code example:</strong> status=provided, relationship=illustrative</p><div class="meta">c</div><pre class="code-block">	rs = WSAAccept(s, addr, addrlen, NULL, 0);
+	if (rs == INVALID_SOCKET)
+	{
+		TranslateSocketError();
+		return INVALID_SOCKET;
+	}
+
+	if (!SetHandleInformation((HANDLE) rs, HANDLE_FLAG_INHERIT, 0))
+	{
+		TranslateSocketError();
+		closesocket(rs);
+		return INVALID_SOCKET;
+	}
+
+	return rs;</pre><p class="readable"><strong>Patch:</strong> status=provided, format=unified-diff, applies_to_head=6f3bdadaadc4692050ca20dff53d3890088b9272, sha256=c1e43960afcda0455e0bdd506636143855b5f32061e6b65bef0cbf94b268a82b</p><div class="meta">diff</div><pre class="code-block">diff --git a/src/backend/port/win32/socket.c b/src/backend/port/win32/socket.c
+index e16fd85ddd4..0f56b2ed272 100644
+--- a/src/backend/port/win32/socket.c
++++ b/src/backend/port/win32/socket.c
+@@ -285,7 +285,11 @@ pgwin32_waitforsinglesocket(SOCKET s, int what, int timeout)
+ }
+ 
+ /*
+- * Create a socket, setting it to overlapped and non-blocking
++ * Create a socket, setting it to overlapped, non-blocking, and non-inheritable.
++ *
++ * We must prevent child processes from inheriting socket handles. Otherwise,
++ * the kernel&#x27;s reference counting means listening sockets can stay bound even
++ * after postmaster exit, preventing restart.
+  */
+ SOCKET
+ pgwin32_socket(int af, int type, int protocol)
+@@ -293,7 +297,8 @@ pgwin32_socket(int af, int type, int protocol)
+ 	SOCKET		s;
+ 	unsigned long on = 1;
+ 
+-	s = WSASocket(af, type, protocol, NULL, 0, WSA_FLAG_OVERLAPPED);
++	s = WSASocket(af, type, protocol, NULL, 0,
++				  WSA_FLAG_OVERLAPPED | WSA_FLAG_NO_HANDLE_INHERIT);
+ 	if (s == INVALID_SOCKET)
+ 	{
+ 		TranslateSocketError();
+@@ -350,6 +355,21 @@ pgwin32_accept(SOCKET s, struct sockaddr *addr, int *addrlen)
+ 		TranslateSocketError();
+ 		return INVALID_SOCKET;
+ 	}
++
++	/*
++	 * WSAAccept does not accept WSA_FLAG_NO_HANDLE_INHERIT and does not
++	 * guarantee that the accepted socket is non-inheritable (the result may
++	 * depend on the installed Layered Service Provider). Explicitly clear the
++	 * inherit flag so that child processes spawned by this backend (e.g., via
++	 * COPY TO PROGRAM) do not inherit the client socket.
++	 */
++	if (!SetHandleInformation((HANDLE) rs, HANDLE_FLAG_INHERIT, 0))
++	{
++		TranslateSocketError();
++		closesocket(rs);
++		return INVALID_SOCKET;
++	}
++
+ 	return rs;
+ }
+</pre><p class="readable"><strong>Repair validation:</strong> status=not-run</p><ul><li>Methods: apply-check, diff-check</li><li>Commands: git apply --check patch-socket-combined.diff, git apply patch-socket-combined.diff</li><li>Evidence: Patch applies cleanly to HEAD 6f3bdadaadc. Includes both the pgwin32_socket WSA_FLAG_NO_HANDLE_INHERIT change and the pgwin32_accept SetHandleInformation fix.</li><li>Reason: WIN32-guarded code (src/backend/port/win32/socket.c) not compilable on Linux build host. Compile and targeted-test cannot run.</li><li>Tested patch SHA-256: c1e43960afcda0455e0bdd506636143855b5f32061e6b65bef0cbf94b268a82b</li></ul><p class="readable"><strong>Test example:</strong> status=provided</p><ul><li>Vehicle: tap</li><li>Files: src/test/recovery/t/058_socket_handle_inheritance.pl</li><li>Oracle: With the accept fix: accepted sockets are explicitly non-inheritable. Without: accepted sockets may be inheritable depending on LSP.</li><li>Baseline result: On Windows without accept fix: accepted socket may be inheritable depending on LSP. Not runnable on Linux.</li><li>Patched result: On Windows with accept fix: accepted socket explicitly non-inheritable.</li></ul><p class="readable">---</p></section><section class="finding-card card-low"><div class="finding-head"><span class="finding-id">PAT-8</span><h3>— NIT — correctness — src/backend/tcop/backend_startup.c:182-185</h3></div><p class="readable"><strong>Mechanism:</strong> The comment says the socket &#x27;becomes inheritable again in this process&#x27; but does not explain why: read_inheritable_socket recreates it via WSASocket(FROM_PROTOCOL_INFO,...,0) with dwFlags=0, yielding an inheritable handle.</p><p class="readable"><strong>Failure mode:</strong> Reduced readability for future maintainers; the mechanism is non-obvious.</p><p class="readable"><strong>Verification status:</strong> verified <strong>Verification method:</strong> source-analysis <strong>Verification evidence:</strong> src/backend/postmaster/launch_backend.c:851-856 (read_inheritable_socket uses WSASocket(FROM_PROTOCOL_INFO,...,0) with dwFlags=0). The staged comment at backend_startup.c:182-185 is correct but imprecise.</p><p class="readable"><strong>Repair instruction:</strong></p><ul><li>Files: src/backend/tcop/backend_startup.c</li><li>Locations: Lines 182-185 (staged comment)</li><li>Exact edits: Expand the comment to cite the read_inheritable_socket mechanism (WSASocket FROM_PROTOCOL_INFO with dwFlags=0) and reference the Unix fcntl(F_SETFD, FD_CLOEXEC) in pqcomm.c. Combined with PAT-6 fix.</li><li>Intended postcondition: Comment explains why the socket becomes inheritable again, not just that it does.</li></ul><p class="readable"><strong>Code example:</strong> status=provided, relationship=exact-postimage</p><div class="meta">c</div><pre class="code-block">#ifdef WIN32
+	/*
+	 * On Windows, the client socket inherited from the postmaster becomes
+	 * inheritable again in this process (read_inheritable_socket recreates it
+	 * via WSASocket(FROM_PROTOCOL_INFO, ..., 0) with dwFlags=0, which yields
+	 * an inheritable handle). Prevent child processes spawned by this backend
+	 * from inheriting it, mirroring the Unix fcntl(F_SETFD, FD_CLOEXEC) in
+	 * pqcomm.c. Fail hard like the Unix path does: continuing with an
+	 * inheritable socket would reintroduce the zombie-port bug.
+	 */
+	if (!SetHandleInformation((HANDLE) port-&gt;sock, HANDLE_FLAG_INHERIT, 0))
+		ereport(FATAL,
+				(errmsg_internal(&quot;could not disable socket handle inheritance: error code %lu&quot;,
+								 GetLastError())));
+#endif</pre><p class="readable"><strong>Patch:</strong> status=provided, format=unified-diff, applies_to_head=6f3bdadaadc4692050ca20dff53d3890088b9272, sha256=b0998e8f58b53e2585dd4060c8743561d3a133aeb4fa3843a7e7693e020c889f</p><div class="meta">diff</div><pre class="code-block">diff --git a/src/backend/tcop/backend_startup.c b/src/backend/tcop/backend_startup.c
+index 912ad7dc957..7dc3cb137d1 100644
+--- a/src/backend/tcop/backend_startup.c
++++ b/src/backend/tcop/backend_startup.c
+@@ -177,6 +177,22 @@ BackendInitialize(ClientSocket *client_sock, CAC_state cac)
+ 	port = MyProcPort = pq_init(client_sock);
+ 	MemoryContextSwitchTo(oldcontext);
+ 
++#ifdef WIN32
++	/*
++	 * On Windows, the client socket inherited from the postmaster becomes
++	 * inheritable again in this process (read_inheritable_socket recreates it
++	 * via WSASocket(FROM_PROTOCOL_INFO, ..., 0) with dwFlags=0, which yields
++	 * an inheritable handle). Prevent child processes spawned by this backend
++	 * from inheriting it, mirroring the Unix fcntl(F_SETFD, FD_CLOEXEC) in
++	 * pqcomm.c. Fail hard like the Unix path does: continuing with an
++	 * inheritable socket would reintroduce the zombie-port bug.
++	 */
++	if (!SetHandleInformation((HANDLE) port-&gt;sock, HANDLE_FLAG_INHERIT, 0))
++		ereport(FATAL,
++				(errmsg_internal(&quot;could not disable socket handle inheritance: error code %lu&quot;,
++								 GetLastError())));
++#endif
++
+ 	whereToSendOutput = DestRemote; /* now safe to ereport to client */
+ 
+ 	/* set these to empty in case they are needed before we set them up */
+</pre><p class="readable"><strong>Repair validation:</strong> status=not-run</p><ul><li>Methods: apply-check, diff-check</li><li>Commands: git apply --check patch-backend-startup-fatal-and-comment.diff, git apply patch-backend-startup-fatal-and-comment.diff</li><li>Evidence: Patch applies cleanly to HEAD. The comment is expanded to cite read_inheritable_socket and the dwFlags=0 mechanism. Combined with PAT-6 FATAL fix.</li><li>Reason: WIN32-guarded code not compilable on Linux build host.</li><li>Tested patch SHA-256: b0998e8f58b53e2585dd4060c8743561d3a133aeb4fa3843a7e7693e020c889f</li></ul><p class="readable"><strong>Test example:</strong> status=waived</p><ul><li>Waiver kind: design-choice</li><li>Why: A comment improvement has no behavioral test oracle.</li></ul><p class="readable">---</p></section><section class="finding-card card-low"><div class="finding-head"><span class="finding-id">PAT-9</span><h3>— NIT — docs — src/backend/port/win32/socket.c:300-301</h3></div><p class="readable"><strong>Mechanism:</strong> WSA_FLAG_NO_HANDLE_INHERIT requires Windows Vista+ (_WIN32_WINNT &gt;= 0x0600). PostgreSQL&#x27;s floor is 0x0A00 (Windows 10), so the flag is always available. The comment does not document this availability floor.</p><p class="readable"><strong>Failure mode:</strong> Future maintainers may worry about compatibility; no docs note explains the floor is safe.</p><p class="readable"><strong>Verification status:</strong> verified <strong>Verification method:</strong> source-analysis <strong>Verification evidence:</strong> src/include/port/win32.h:16-20 (_WIN32_WINNT = 0x0A00). WSA_FLAG_NO_HANDLE_INHERIT (0x80) available since Windows Vista (0x0600). Floor is far exceeded.</p><p class="readable"><strong>Repair instruction:</strong></p><ul><li>Files: src/backend/port/win32/socket.c</li><li>Locations: Comment above pgwin32_socket (staged comment at lines 287-293)</li><li>Exact edits: Add a note to the comment documenting that WSA_FLAG_NO_HANDLE_INHERIT requires Vista+ (_WIN32_WINNT &gt;= 0x0600) and our floor is 0x0A00 (Windows 10), so the flag is always available.</li><li>Intended postcondition: Comment documents the availability floor of WSA_FLAG_NO_HANDLE_INHERIT.</li></ul><p class="readable"><strong>Code example:</strong> status=provided, relationship=illustrative</p><div class="meta">c</div><pre class="code-block">/*
+ * Create a socket, setting it to overlapped, non-blocking, and non-inheritable.
+ *
+ * We must prevent child processes from inheriting socket handles. Otherwise,
+ * the kernel&#x27;s reference counting means listening sockets can stay bound even
+ * after postmaster exit, preventing restart.
+ *
+ * WSA_FLAG_NO_HANDLE_INHERIT is available since Windows Vista (_WIN32_WINNT
+ * &gt;= 0x0600); our minimum target is _WIN32_WINNT 0x0A00 (Windows 10), so the
+ * flag is always available.
+ */
+SOCKET
+pgwin32_socket(int af, int type, int protocol)
+{
+	SOCKET		s;
+	unsigned long on = 1;
+
+	s = WSASocket(af, type, protocol, NULL, 0,
+				  WSA_FLAG_OVERLAPPED | WSA_FLAG_NO_HANDLE_INHERIT);</pre><p class="readable"><strong>Patch:</strong> status=provided, format=unified-diff, applies_to_head=6f3bdadaadc4692050ca20dff53d3890088b9272, sha256=ae0a5754d9fc174488441f63becb0860dfc69270c5a3e5eb3af42d7bdbda64c1</p><div class="meta">diff</div><pre class="code-block">diff --git a/src/backend/port/win32/socket.c b/src/backend/port/win32/socket.c
+index e16fd85ddd4..6787b159cff 100644
+--- a/src/backend/port/win32/socket.c
++++ b/src/backend/port/win32/socket.c
+@@ -285,7 +285,15 @@ pgwin32_waitforsinglesocket(SOCKET s, int what, int timeout)
+ }
+ 
+ /*
+- * Create a socket, setting it to overlapped and non-blocking
++ * Create a socket, setting it to overlapped, non-blocking, and non-inheritable.
++ *
++ * We must prevent child processes from inheriting socket handles. Otherwise,
++ * the kernel&#x27;s reference counting means listening sockets can stay bound even
++ * after postmaster exit, preventing restart.
++ *
++ * WSA_FLAG_NO_HANDLE_INHERIT is available since Windows Vista (_WIN32_WINNT
++ * &gt;= 0x0600); our minimum target is _WIN32_WINNT 0x0A00 (Windows 10), so the
++ * flag is always available.
+  */
+ SOCKET
+ pgwin32_socket(int af, int type, int protocol)
+@@ -293,7 +301,8 @@ pgwin32_socket(int af, int type, int protocol)
+ 	SOCKET		s;
+ 	unsigned long on = 1;
+ 
+-	s = WSASocket(af, type, protocol, NULL, 0, WSA_FLAG_OVERLAPPED);
++	s = WSASocket(af, type, protocol, NULL, 0,
++				  WSA_FLAG_OVERLAPPED | WSA_FLAG_NO_HANDLE_INHERIT);
+ 	if (s == INVALID_SOCKET)
+ 	{
+ 		TranslateSocketError();
+</pre><p class="readable"><strong>Repair validation:</strong> status=not-run</p><ul><li>Methods: apply-check, diff-check</li><li>Commands: git apply --check patch-socket-docs-floor.diff, git apply patch-socket-docs-floor.diff</li><li>Evidence: Patch applies cleanly to HEAD. The comment now documents the Vista+ availability floor and confirms the 0x0A00 floor is safe.</li><li>Reason: WIN32-guarded code not compilable on Linux build host.</li><li>Tested patch SHA-256: ae0a5754d9fc174488441f63becb0860dfc69270c5a3e5eb3af42d7bdbda64c1</li></ul><p class="readable"><strong>Test example:</strong> status=waived</p><ul><li>Waiver kind: design-choice</li><li>Why: A documentation comment has no behavioral test oracle.</li></ul><p class="readable">---</p></section><h2>Verification Summary</h2><p class="readable">All 9 findings were <strong>verified</strong> via source analysis. 0 refuted. 0 cannot-verify.</p><div class="table-wrap"><table class="md-table"><thead><tr><th>Finding</th><th>Verification</th><th>Method</th></tr></thead><tbody><tr><td>PAT-1</td><td>verified</td><td>source-analysis</td></tr><tr><td>PAT-2</td><td>verified</td><td>source-analysis</td></tr><tr><td>PAT-3</td><td>verified</td><td>source-analysis</td></tr><tr><td>PAT-4</td><td>verified</td><td>source-analysis</td></tr><tr><td>PAT-5</td><td>verified</td><td>source-analysis</td></tr><tr><td>PAT-6</td><td>verified</td><td>source-analysis</td></tr><tr><td>PAT-7</td><td>verified</td><td>source-analysis</td></tr><tr><td>PAT-8</td><td>verified</td><td>source-analysis</td></tr><tr><td>PAT-9</td><td>verified</td><td>source-analysis</td></tr></tbody></table></div><p class="readable">No runtime verification was possible on the Linux build host because all changed C code is <code>#ifdef WIN32</code>-guarded and the TAP test is Windows-only (<code>plan skip_all</code> on non-MSWin32). Patches were validated with <code>git apply --check</code> (apply-check) and <code>git diff</code> comparison (diff-check) in a disposable worktree at HEAD.</p><h2>Repair Validation Summary</h2><div class="table-wrap"><table class="md-table"><thead><tr><th>Finding</th><th>Validation Status</th><th>Methods</th><th>Reason</th></tr></thead><tbody><tr><td>PAT-1</td><td>not-run</td><td>apply-check, diff-check</td><td>Windows-only TAP test (plan skip_all if $^O ne &#x27;MSWin32&#x27;). Targeted-test cannot run on Linux build host. Only apply-check and diff-check were performed.</td></tr><tr><td>PAT-2</td><td>not-run</td><td>apply-check, diff-check</td><td>Windows-only TAP test (plan skip_all if $^O ne &#x27;MSWin32&#x27;). Targeted-test cannot run on Linux build host. Only apply-check and diff-check were performed.</td></tr><tr><td>PAT-3</td><td>not-run</td><td>apply-check, diff-check</td><td>Windows-only TAP test (plan skip_all if $^O ne &#x27;MSWin32&#x27;). Targeted-test cannot run on Linux build host. Only apply-check and diff-check were performed.</td></tr><tr><td>PAT-4</td><td>not-run</td><td>apply-check, diff-check</td><td>Windows-only TAP test (plan skip_all if $^O ne &#x27;MSWin32&#x27;). Targeted-test cannot run on Linux build host. Only apply-check and diff-check were performed.</td></tr><tr><td>PAT-5</td><td>not-run</td><td>apply-check, diff-check</td><td>Windows-only TAP test (plan skip_all if $^O ne &#x27;MSWin32&#x27;). Targeted-test cannot run on Linux build host. Only apply-check and diff-check were performed.</td></tr><tr><td>PAT-6</td><td>not-run</td><td>apply-check, diff-check</td><td>WIN32-guarded code (#ifdef WIN32) not compilable on Linux build host. Compile and targeted-test cannot run.</td></tr><tr><td>PAT-7</td><td>not-run</td><td>apply-check, diff-check</td><td>WIN32-guarded code (src/backend/port/win32/socket.c) not compilable on Linux build host. Compile and targeted-test cannot run.</td></tr><tr><td>PAT-8</td><td>not-run</td><td>apply-check, diff-check</td><td>WIN32-guarded code not compilable on Linux build host.</td></tr><tr><td>PAT-9</td><td>not-run</td><td>apply-check, diff-check</td><td>WIN32-guarded code not compilable on Linux build host.</td></tr></tbody></table></div><p class="readable">Test-related findings (PAT-1 through PAT-5): apply-check and diff-check passed. Targeted-test could not run (Windows-only test on Linux host). C-code findings (PAT-6 through PAT-9): apply-check and diff-check passed. Compile could not run (WIN32-guarded code on Linux host).</p><h2>Changed-Code Coverage</h2><p class="readable"><strong>Coverage requirement:</strong> <code>not-applicable</code></p><p class="readable"><strong>Reason:</strong> All changed C implementation code is WIN32-guarded and not compiled on this Linux build host. <code>src/backend/port/win32/socket.c</code> is only compiled when <code>host_system == &#x27;windows&#x27;</code> (<code>src/backend/port/meson.build:28</code>). The <code>#ifdef WIN32</code> block in <code>backend_startup.c</code> is preprocessed out on Linux. The TAP test is Windows-only. No instrumentable changed implementation paths exist on this build host; a fresh coverage epoch cannot produce gcov/gcovr counters for the changed code.</p><p class="readable"><strong>Non-instrumented changes:</strong></p><div class="table-wrap"><table class="md-table"><thead><tr><th>Path</th><th>Reason</th></tr></thead><tbody><tr><td>src/backend/port/win32/socket.c</td><td>WIN32-only file; not compiled on Linux build host (src/backend/port/meson.build:28 guards subdir(&#x27;win32&#x27;) behind host_system == &#x27;windows&#x27;). Changed lines in pgwin32_socket (WSA_FLAG_NO_HANDLE_INHERIT) and pgwin32_accept (if addressed) are non-instrumentable here.</td></tr><tr><td>src/backend/tcop/backend_startup.c</td><td>The changed lines (180-190) are inside #ifdef WIN32, preprocessed out on Linux. The rest of BackendInitialize is unchanged. No instrumentable changed lines on this host.</td></tr><tr><td>src/bin/pg_ctl/t/005_socket_handle_inheritance.pl</td><td>Windows-only TAP test (plan skip_all if $^O ne &#x27;MSWin32&#x27;). Skips immediately on Linux, producing a vacuous pass with no coverage data.</td></tr><tr><td>src/bin/pg_ctl/meson.build</td><td>Build system metadata file; not instrumentable code.</td></tr></tbody></table></div><p class="readable"><strong>Residual limitation:</strong> A Windows CI runner (cirrus-windows/bf-windows) is required to measure coverage of the patched WIN32 code paths. Coverage measurement is deferred to that environment.</p><h2>pgsql-hackers Thread Ledger</h2><p class="readable"><strong>Status:</strong> reconciled <strong>Ledger report slug:</strong> commitfest-6207-review-handoff-thread-ledger <strong>Thread:</strong> 626963 — [PATCH] Fix socket handle inheritance on Windows <strong>Participants:</strong> Bryan Green, Thomas Munro</p><h3>Message chronology</h3><div class="table-wrap"><table class="md-table"><thead><tr><th>#</th><th>Date</th><th>Sender</th><th>Kind</th><th>Summary</th></tr></thead><tbody><tr><td>1</td><td>2025-11-06T05:06:25+00:00</td><td>Bryan Green</td><td>patch</td><td>Initial patch submission. Reproduces zombie port binding: psql \copy to long-running powershell, kil...</td></tr><tr><td>2</td><td>2025-11-06T05:34:00+00:00</td><td>Bryan Green</td><td>patch</td><td>Correction: wrong file extension on the initial patch; resends with correct patch....</td></tr><tr><td>3</td><td>2025-11-07T01:03:06+00:00</td><td>Thomas Munro</td><td>review</td><td>Endorses WSA_FLAG_NO_HANDLE_INHERIT change. Suggests SOCK_CLOEXEC / socket_set_cloexec() helper to h...</td></tr><tr><td>4</td><td>2025-11-07T01:35:29+00:00</td><td>Bryan Green</td><td>author-reply</td><td>Agrees to implement SOCK_CLOEXEC abstraction and socket_set_cloexec() helper. Says &#x27;My bug fix will ...</td></tr><tr><td>5</td><td>2025-11-07T01:40:00+00:00</td><td>Thomas Munro</td><td>committer-reply</td><td>+1 Thanks for working on all this stuff. Cool. No objections, green light....</td></tr></tbody></table></div><h3>Finding dispositions</h3><div class="table-wrap"><table class="md-table"><thead><tr><th>Finding</th><th>Disposition</th><th>On-list?</th><th>Rationale</th></tr></thead><tbody><tr><td>PAT-6</td><td>already-raised</td><td>Yes</td><td>Thomas Munro raised the socket_set_cloexec() harmonization and the FATAL-vs-WARN...</td></tr><tr><td>PAT-7</td><td>already-raised</td><td>Yes</td><td>Thomas Munro noted the accept4()-equivalent need for accepted sockets in the sam...</td></tr><tr><td>PAT-1</td><td>new</td><td>No</td><td>The test-exercises-wrong-code-path defect (\copy is client-side) was not raised ...</td></tr><tr><td>PAT-2</td><td>new</td><td>No</td><td>The safe_psql hang / pclose-blocks defect was not raised on-list....</td></tr><tr><td>PAT-3</td><td>new</td><td>No</td><td>The 2&gt;nul-vs-2&gt;$null syntax defect was not raised on-list....</td></tr><tr><td>PAT-4</td><td>new</td><td>No</td><td>Missing trailing newline was not raised on-list....</td></tr><tr><td>PAT-5</td><td>new</td><td>No</td><td>Test placement under pg_ctl was not raised on-list....</td></tr><tr><td>PAT-8</td><td>new</td><td>No</td><td>Comment improvement suggestion was not raised on-list....</td></tr><tr><td>PAT-9</td><td>new</td><td>No</td><td>Docs-floor note was not raised on-list....</td></tr></tbody></table></div><p class="readable"><strong>Key thread outcomes:</strong></p><ul><li>Thomas Munro endorsed the <code>WSA_FLAG_NO_HANDLE_INHERIT</code> approach (+1).</li><li>Suggested <code>SOCK_CLOEXEC</code> / <code>socket_set_cloexec()</code> helper to harmonize cross-platform with Unix <code>fcntl(F_SETFD, FD_CLOEXEC)</code> — author agreed but not yet implemented in this patch.</li><li>Noted future <code>accept4()</code>-equivalent for Windows (relates to PAT-7).</li><li>No unresolved objections.</li></ul><h2>Security Summary</h2><p class="readable">No BLOCKER or MAJOR security issues. The patch correctly closes the Windows client-socket-inheritance gap (Unix <code>FD_CLOEXEC</code> equivalent). Remaining security items:</p><ul><li><strong>PAT-6 (MINOR):</strong> <code>WARNING</code> severity on <code>SetHandleInformation</code> failure is fail-open; Unix equivalent is <code>FATAL</code>. Recommended fix: escalate to <code>FATAL</code>.</li><li><strong>PAT-7 (MINOR):</strong> Accepted sockets via <code>WSAAccept</code> may remain inheritable depending on LSP. Recommended fix: explicit <code>SetHandleInformation</code> in <code>pgwin32_accept</code>.</li><li>Privilege required to reach any flagged path: <code>pg_execute_server_program</code> (for COPY-child leak vector). No unauthenticated-reachable escalation identified.</li></ul><h2>Aggregated Test Plan</h2><ol><li><strong>Replace</strong> <code>src/bin/pg_ctl/t/005_socket_handle_inheritance.pl</code> with <code>src/test/recovery/t/058_socket_handle_inheritance.pl</code> (PAT-1/PAT-2/PAT-3/PAT-4/PAT-5).</li><li>The new test uses server-side <code>COPY ... TO PROGRAM</code> (not client-side <code>\copy</code>), a detached <code>Start-Process</code> grandchild (not blocking <code>safe_psql</code>), PowerShell-native error suppression, and a trailing newline.</li><li>Two-run validation must be performed on a <strong>Windows CI runner</strong>: apply the test on base (expect restart failure — port stuck) and on HEAD (expect restart success — port freed).</li><li>The <code>SetHandleInformation</code> failure path (PAT-6 FATAL) is not deterministically triggerable without an injection point; documented as a follow-up.</li></ol><h2>Provenance</h2><div class="table-wrap"><table class="md-table"><thead><tr><th>Seat</th><th>Model</th><th>Slug</th></tr></thead><tbody><tr><td>pg-patch-reviewer</td><td>glm-5.2:cloud</td><td>commitfest-6207-review-handoff-patch-reviewer</td></tr><tr><td>pg-security-reviewer</td><td>glm-5.2:cloud</td><td>commitfest-6207-review-handoff-security-reviewer</td></tr><tr><td>pg-test-author</td><td>glm-5.2:cloud</td><td>commitfest-6207-review-handoff-test-author</td></tr><tr><td>pg-finding-verifier</td><td>glm-5.2:cloud</td><td>commitfest-6207-review-handoff-verifier</td></tr><tr><td>thread-reconciler</td><td>glm-5.2:cloud</td><td>commitfest-6207-review-handoff-thread-ledger</td></tr><tr><td>pg-change-coverage-reviewer</td><td>N/A</td><td>not-applicable (WIN32 code)</td></tr></tbody></table></div><h2>Residual Risk</h2><ul><li>The core C fix (<code>WSA_FLAG_NO_HANDLE_INHERIT</code> + <code>SetHandleInformation</code>) is correct but <strong>cannot be compiled or runtime-tested on this Linux host</strong>. All C patches passed apply-check/diff-check only.</li><li>The TAP test is fundamentally flawed (PAT-1/PAT-2) and must be redesigned before merge. The proposed replacement test (PAT-1 repair) requires Windows CI validation.</li><li>PAT-6 (fail-open <code>WARNING</code>) and PAT-7 (accepted-socket inheritance) are MINOR security improvements that should be addressed but are not blockers.</li><li>The agreed <code>socket_set_cloexec()</code> harmonization (Thomas Munro, on-list) is not yet implemented; the current patch inlines the Windows call separately from the Unix path.</li></ul><h2>Deterministic Verdict</h2><p class="readable"><strong><code>waiting-on-author</code></strong></p><p class="readable">Rationale:</p><ul><li>0 BLOCKER findings (verified or unverified).</li><li>2 MAJOR test-correctness findings (PAT-1, PAT-2) make the TAP test non-functional: it exercises the wrong code path (client-side <code>\copy</code>) and would hang <code>safe_psql</code> for ~120s. The test must be redesigned before the patch can be considered ready-for-committer.</li><li>The core C fix is correct and agreed on-list; no correctness/security MAJOR findings against the implementation code.</li><li>Per the verdict rules: any surviving MAJOR in tests that blocks merge → <code>waiting-on-author</code> (the test portion blocks committer readiness even though the code fix is sound).</li></ul><p class="readable"><strong>Blocker split:</strong> verified=0, unverified=0. No blockers at any severity level.</p></div></article></body></html>
